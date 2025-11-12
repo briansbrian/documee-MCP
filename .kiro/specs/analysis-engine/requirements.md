@@ -19,15 +19,23 @@ The Analysis Engine is the intelligence layer of the Documee MCP Server that tra
 
 ### Requirement 1: AST Parser for Multi-Language Support
 
-**User Story:** As a developer, I want the system to parse code files into ASTs, so that I can analyze code structure programmatically across multiple languages.
+**User Story:** As a developer, I want the system to parse code files into ASTs, so that I can analyze code structure programmatically across 50+ programming languages.
 
 #### Acceptance Criteria
 
 1. WHEN THE System receives a file path with .py extension, THE Analysis Engine SHALL parse the file using tree-sitter Python grammar and return an AST
 2. WHEN THE System receives a file path with .js or .jsx extension, THE Analysis Engine SHALL parse the file using tree-sitter JavaScript grammar and return an AST
 3. WHEN THE System receives a file path with .ts or .tsx extension, THE Analysis Engine SHALL parse the file using tree-sitter TypeScript grammar and return an AST
-4. WHEN THE System encounters a syntax error during parsing, THE Analysis Engine SHALL log the error and return a partial AST with error nodes
-5. WHEN THE System parses a file larger than max_file_size_mb, THE Analysis Engine SHALL raise a ValueError with message "File too large for parsing"
+4. WHEN THE System receives a file path with .java extension, THE Analysis Engine SHALL parse the file using tree-sitter Java grammar and return an AST
+5. WHEN THE System receives a file path with .go extension, THE Analysis Engine SHALL parse the file using tree-sitter Go grammar and return an AST
+6. WHEN THE System receives a file path with .rs extension, THE Analysis Engine SHALL parse the file using tree-sitter Rust grammar and return an AST
+7. WHEN THE System receives a file path with .cpp, .cc, or .cxx extension, THE Analysis Engine SHALL parse the file using tree-sitter C++ grammar and return an AST
+8. WHEN THE System receives a file path with .cs extension, THE Analysis Engine SHALL parse the file using tree-sitter C# grammar and return an AST
+9. WHEN THE System receives a file path with .rb extension, THE Analysis Engine SHALL parse the file using tree-sitter Ruby grammar and return an AST
+10. WHEN THE System receives a file path with .php extension, THE Analysis Engine SHALL parse the file using tree-sitter PHP grammar and return an AST
+11. WHEN THE System encounters a syntax error during parsing, THE Analysis Engine SHALL log the error and return a partial AST with error nodes
+12. WHEN THE System parses a file larger than max_file_size_mb, THE Analysis Engine SHALL raise a ValueError with message "File too large for parsing"
+13. WHEN THE System receives a file with unsupported extension, THE Analysis Engine SHALL log a warning and skip the file
 
 ### Requirement 2: Function and Class Extraction
 

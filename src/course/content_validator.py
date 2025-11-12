@@ -558,4 +558,237 @@ class ContentValidator:
                 # Check if it matches a lesson title
                 if link_lower not in valid_titles:
                     self.report.add_issue(ValidationIssue(
-                  
+                        severity='warning',
+                        category='links',
+                        message=f"{context} contains potentially broken internal link: [{link_text}]({link_url})",
+                        file_path=file_path,
+                        suggestion="Verify the link points to a valid lesson or resource"
+                    ))
+    
+    # ========== Requirement 13.5: Validation Reporting ==========
+    
+    def _validate_course_structure(self, course: CourseOutline):
+        """Validate overall course structure.
+        
+        Args:
+            course: CourseOutline to validate
+        """
+        if not course.modules:
+            self.report.add_issue(ValidationIssue(
+                severity='error',
+                category='structure',
+                message="Course has no modules",
+                suggestion="Generate course structure with at least one module"
+            ))
+        elif len(course.modules) < 3:
+            self.report.add_issue(ValidationIssue(
+                severity='warning',
+                category='structure',
+                message=f"Course has only {len(course.modules)} module(s) (recommended: 3-8)",
+                suggestion="Consider organizing content into more modules for better structure"
+            ))
+        elif len(course.modules) > 8:
+            self.report.add_issue(ValidationIssue(
+                severity='warning',
+                category='structure',
+                message=f"Course has {len(course.modules)} modules (recommended: 3-8)",
+                suggestion="Consider consolidating modules for better organization"
+            ))
+        
+        # Validate course metadata
+        if not course.title:
+            self.report.add_issue(ValidationIssue(
+                severity='error',
+                category='structure',
+                message="Course has no title",
+                suggestion="Add a descriptive course title"
+            ))
+        
+        if not course.description:
+            self.report.add_issue(ValidationIssue(
+                severity='warning',
+                category='structure',
+                message="Course has no description",
+                suggestion="Add a course description to help students understand what they'll learn"
+            ))
+    
+    def _validate_module(self, module: Module, course: CourseOutline):
+        """Validate a module and its lessons.
+        
+        Args:
+            module: Module to validate
+            course: Parent course (for context)
+        """
+        if not module.lessons:
+            self.report.add_issue(ValidationIssue(
+                severity='error',
+                category='structure',
+                message=f"Module '{module.title}' has no lessons",
+                suggestion="Add at least one lesson to the module"
+            ))
+            return
+        
+        # Validate each lesson
+        for lesson in module.lessons:
+            self._validate_lesson_structure(lesson)
+    
+    def _validate_lesson_structure(self, lesson: Lesson):
+        """Validate lesson structure and content.
+        
+        Implements Requirements 13.1, 13.2, 13.3:
+        - Validates learning objectives
+        - Validates code examples
+        - Validates exercise syntax
+        
+        Args:
+            lesson: Lesson to validate
+        """
+        # Requirement 13.1: Validate learning objectives
+        self._validate_learning_objectives(lesson)
+        
+        # Requirement 13.2: Validate code examples
+        self._validate_code_examples(lesson)
+        
+        # Validate lesson metadata
+        if not lesson.title:
+            self.report.add_issue(ValidationIssue(
+                severity='error',
+                category='structure',
+                message=f"Lesson in file '{lesson.file_path}' has no title",
+                file_path=lesson.file_path,
+                suggestion="Add a descriptive lesson title"
+            ))
+        
+        if not lesson.description:
+            self.report.add_issue(ValidationIssue(
+                severity='warning',
+                category='structure',
+                message=f"Lesson '{lesson.title}' has no description",
+                file_path=lesson.file_path,
+                suggestion="Add a lesson description"
+            ))
+        
+        if lesson.duration_minutes <= 0:
+            self.report.add_issue(ValidationIssue(
+                severity='warning',
+                category='structure',
+                message=f"Lesson '{lesson.title}' has invalid duration: {lesson.duration_minutes} minutes",
+                file_path=lesson.file_path,
+                suggestion="Set a realistic lesson duration (typically 15-60 minutes)"
+            ))
+        
+        # Requirement 13.3: Validate exercises
+        if lesson.exercises:
+            for exercise in lesson.exercises:
+                self._validate_exercise_syntax(exercise, lesson)
+        else:
+            self.report.add_issue(ValidationIssue(
+                severity='info',
+                category='structure',
+                message=f"Lesson '{lesson.title}' has no exercises",
+                file_path=lesson.file_path,
+                suggestion="Consider adding 1-3 exercises for hands-on practice"
+            ))
+    
+    def generate_report_text(self) -> str:
+        """Generate human-readable validation report.
+        
+        Implements Requirement 13.5: Generates validation report with issues,
+        file paths, line numbers, and suggestions.
+        
+        Returns:
+            Formatted validation report as string
+        """
+        lines = []
+        
+        lines.append("=" * 70)
+        lines.append("CONTENT VALIDATION REPORT")
+        lines.append("=" * 70)
+        lines.append("")
+        
+        # Summary
+        lines.append(f"Status: {'PASSED' if self.report.passed else 'FAILED'}")
+        lines.append(f"Total Issues: {self.report.total_issues}")
+        lines.append(f"  - Errors: {self.report.errors}")
+        lines.append(f"  - Warnings: {self.report.warnings}")
+        lines.append(f"  - Info: {self.report.info}")
+        lines.append("")
+        
+        if not self.report.issues:
+            lines.append("✓ No issues found. Content validation passed!")
+            lines.append("")
+        else:
+            # Group issues by severity
+            errors = [i for i in self.report.issues if i.severity == 'error']
+            warnings = [i for i in self.report.issues if i.severity == 'warning']
+            info = [i for i in self.report.issues if i.severity == 'info']
+            
+            # Report errors
+            if errors:
+                lines.append("-" * 70)
+                lines.append(f"ERRORS ({len(errors)})")
+                lines.append("-" * 70)
+                for issue in errors:
+                    lines.extend(self._format_issue(issue))
+                lines.append("")
+            
+            # Report warnings
+            if warnings:
+                lines.append("-" * 70)
+                lines.append(f"WARNINGS ({len(warnings)})")
+                lines.append("-" * 70)
+                for issue in warnings:
+                    lines.extend(self._format_issue(issue))
+                lines.append("")
+            
+            # Report info
+            if info:
+                lines.append("-" * 70)
+                lines.append(f"INFORMATION ({len(info)})")
+                lines.append("-" * 70)
+                for issue in info:
+                    lines.extend(self._format_issue(issue))
+                lines.append("")
+        
+        lines.append("=" * 70)
+        
+        return "\n".join(lines)
+    
+    def _format_issue(self, issue: ValidationIssue) -> List[str]:
+        """Format a single issue for display.
+        
+        Implements Requirement 13.5: Includes file paths, line numbers, and
+        suggestions for fixes.
+        
+        Args:
+            issue: ValidationIssue to format
+            
+        Returns:
+            List of formatted lines
+        """
+        lines = []
+        
+        # Issue header
+        severity_symbol = {
+            'error': '✗',
+            'warning': '⚠',
+            'info': 'ℹ'
+        }
+        symbol = severity_symbol.get(issue.severity, '•')
+        
+        lines.append(f"{symbol} [{issue.category.upper()}] {issue.message}")
+        
+        # Location
+        if issue.file_path:
+            location = f"  File: {issue.file_path}"
+            if issue.line_number:
+                location += f", Line: {issue.line_number}"
+            lines.append(location)
+        
+        # Suggestion
+        if issue.suggestion:
+            lines.append(f"  Suggestion: {issue.suggestion}")
+        
+        lines.append("")
+        
+        return lines

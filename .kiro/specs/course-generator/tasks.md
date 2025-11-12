@@ -341,7 +341,8 @@ The Course Generator transforms analysis results into educational courses with l
 
 
 
-- [-] 9.1 Create ContentValidator class
+- [x] 9.1 Create ContentValidator class
+
 
   - Validate each lesson has learning objectives
   - Validate each lesson has code examples

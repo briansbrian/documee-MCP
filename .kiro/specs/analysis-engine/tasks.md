@@ -454,7 +454,15 @@ This implementation plan breaks down the Analysis Engine into discrete, manageab
   - _Requirements: 11.5, 15.1, 15.2, 15.4_
 
 
-- [ ]* 13.6 Test MCP tools with MCP Inspector
+- [ ] 13.6 Test MCP tools with MCP Inspector
+
+
+
+
+
+
+
+
 
 
 

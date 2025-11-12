@@ -6,7 +6,7 @@ imports, etc.) from parsed Abstract Syntax Trees across multiple languages.
 """
 
 import logging
-from typing import List, Optional, Any
+from typing import List, Optional, Any, Dict
 from dataclasses import dataclass, field
 
 from .ast_parser import ParseResult
@@ -38,6 +38,11 @@ class FunctionInfo:
     complexity: int = 1
     is_async: bool = False
     decorators: List[str] = field(default_factory=list)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 @dataclass
@@ -60,6 +65,11 @@ class ClassInfo:
     start_line: int = 0
     end_line: int = 0
     decorators: List[str] = field(default_factory=list)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 @dataclass
@@ -78,6 +88,11 @@ class ImportInfo:
     is_relative: bool = False
     import_type: str = "import"
     line_number: int = 0
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 @dataclass
@@ -94,6 +109,11 @@ class SymbolInfo:
     classes: List[ClassInfo] = field(default_factory=list)
     imports: List[ImportInfo] = field(default_factory=list)
     exports: List[str] = field(default_factory=list)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 class SymbolExtractor:

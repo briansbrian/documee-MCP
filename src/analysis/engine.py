@@ -538,16 +538,32 @@ class AnalysisEngine:
         current_hashes = {}
         
         # Get file list from scan result
+        # scan_result contains 'path' which is the root directory
+        # We need to walk the directory to get all analyzable files
         file_list = []
-        if hasattr(scan_result, 'files'):
-            # If scan_result has files attribute (list of FileInfo objects)
-            file_list = [f.path if hasattr(f, 'path') else str(f) for f in scan_result.files]
-        elif isinstance(scan_result, dict) and 'files' in scan_result:
-            # If scan_result is a dict
-            file_list = scan_result['files']
+        
+        if isinstance(scan_result, dict) and 'path' in scan_result:
+            root_path = scan_result['path']
+            logger.debug(f"Scanning directory for files: {root_path}")
+            
+            # Walk the directory to find all analyzable files
+            import os
+            for dirpath, dirnames, filenames in os.walk(root_path):
+                # Filter out ignored directories
+                dirnames[:] = [d for d in dirnames if d not in [
+                    'node_modules', '.git', '__pycache__', 'venv', '.venv',
+                    'dist', 'build', '.next', '.cache'
+                ]]
+                
+                for filename in filenames:
+                    file_path = os.path.join(dirpath, filename)
+                    if self._is_analyzable(file_path):
+                        file_list.append(file_path)
+            
+            logger.info(f"Found {len(file_list)} analyzable files")
         else:
-            logger.error(f"Invalid scan result format for {codebase_id}")
-            raise ValueError("Invalid scan result format")
+            logger.error(f"Invalid scan result format for {codebase_id}: missing 'path' key")
+            raise ValueError("Invalid scan result format: missing 'path' key")
         
         for file_path in file_list:
             if not self._is_analyzable(file_path):

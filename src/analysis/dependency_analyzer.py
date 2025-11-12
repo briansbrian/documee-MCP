@@ -49,6 +49,11 @@ class DependencyEdge:
     from_file: str
     to_file: str
     import_count: int = 1
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 @dataclass
@@ -61,6 +66,11 @@ class CircularDependency:
     """
     cycle: List[str]
     severity: str = 'warning'
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 @dataclass
@@ -77,6 +87,28 @@ class DependencyGraph:
     edges: List[DependencyEdge] = field(default_factory=list)
     circular_dependencies: List[CircularDependency] = field(default_factory=list)
     external_dependencies: Dict[str, int] = field(default_factory=dict)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        return {
+            'nodes': {k: v.to_dict() for k, v in self.nodes.items()},
+            'edges': [e.to_dict() for e in self.edges],
+            'circular_dependencies': [c.to_dict() for c in self.circular_dependencies],
+            'external_dependencies': self.external_dependencies
+        }
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'DependencyGraph':
+        """Create from dictionary."""
+        return cls(
+            nodes={k: FileNode(**v) if isinstance(v, dict) else v 
+                  for k, v in data.get('nodes', {}).items()},
+            edges=[DependencyEdge(**e) if isinstance(e, dict) else e 
+                  for e in data.get('edges', [])],
+            circular_dependencies=[CircularDependency(**c) if isinstance(c, dict) else c 
+                                  for c in data.get('circular_dependencies', [])],
+            external_dependencies=data.get('external_dependencies', {})
+        )
 
 
 class DependencyAnalyzer:

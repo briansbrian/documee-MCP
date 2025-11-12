@@ -6,7 +6,7 @@ nesting depth, and decision point counting across multiple languages.
 """
 
 import logging
-from typing import Any, Optional
+from typing import Any, Optional, Dict
 from dataclasses import dataclass, field
 
 logger = logging.getLogger(__name__)
@@ -35,6 +35,11 @@ class ComplexityMetrics:
     avg_nesting_depth: float = 0.0
     max_nesting_depth: int = 0
     total_decision_points: int = 0
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 class ComplexityAnalyzer:

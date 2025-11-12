@@ -38,6 +38,11 @@ class TeachingValueScore:
     structure_score: float = 0.0
     explanation: str = ""
     factors: Dict[str, Any] = field(default_factory=dict)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 class TeachingValueScorer:

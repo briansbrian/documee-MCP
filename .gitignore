@@ -41,6 +41,7 @@ wheels/
 htmlcov/
 .tox/
 .hypothesis/
+.documee/
 
 # IDE
 .vscode/

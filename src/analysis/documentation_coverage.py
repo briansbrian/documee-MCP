@@ -6,7 +6,7 @@ with docstrings/JSDoc comments and detecting inline comments explaining complex 
 """
 
 import logging
-from typing import Optional
+from typing import Optional, Dict, Any
 from dataclasses import dataclass
 
 from .symbol_extractor import SymbolInfo, FunctionInfo, ClassInfo
@@ -44,6 +44,11 @@ class DocumentationCoverage:
     documented_methods: int = 0
     has_inline_comments: bool = False
     inline_comment_bonus: float = 0.0
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 class DocumentationCoverageAnalyzer:

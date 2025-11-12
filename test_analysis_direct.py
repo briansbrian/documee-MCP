@@ -97,9 +97,11 @@ async def test_analysis_engine_direct():
         print("[FAIL] No test files found")
         return
     
-    # Store scan result in cache
+    # Store scan result in cache (must include 'path' key for engine)
+    import os
     scan_result = {
         "codebase_id": codebase_id,
+        "path": os.getcwd(),  # Add path key that engine expects
         "files": existing_files,
         "structure": {"total_files": len(existing_files)}
     }

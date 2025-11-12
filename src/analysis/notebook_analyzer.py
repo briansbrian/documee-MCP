@@ -8,7 +8,7 @@ Handles cell concatenation and line number mapping.
 import json
 from dataclasses import dataclass
 from pathlib import Path
-from typing import List, Optional
+from typing import List, Optional, Dict, Any
 import logging
 
 try:
@@ -27,6 +27,11 @@ class CodeCell:
     end_line: int
     execution_count: Optional[int]
     cell_index: int
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 @dataclass
@@ -36,6 +41,11 @@ class NotebookCode:
     cells: List[CodeCell]
     full_code: str
     total_cells: int
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 class NotebookAnalyzer:

@@ -21,6 +21,34 @@ analysis:
   max_files_per_scan: 10000
   max_parallel_reads: 10
   scan_timeout_seconds: 30
+  
+  # Analysis Engine Configuration
+  supported_languages:
+    - python
+    - javascript
+    - typescript
+    - java
+    - go
+    - rust
+    - cpp
+    - c_sharp
+    - ruby
+    - php
+  
+  max_complexity_threshold: 10
+  min_complexity_threshold: 2
+  min_documentation_coverage: 0.5
+  
+  teaching_value_weights:
+    documentation: 0.3
+    complexity: 0.25
+    pattern: 0.25
+    structure: 0.2
+  
+  max_parallel_files: 10
+  parse_timeout_seconds: 5
+  enable_linters: false
+  cache_ttl_seconds: 3600
 
 security:
   allowed_paths: []

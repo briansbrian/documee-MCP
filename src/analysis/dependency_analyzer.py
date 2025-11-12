@@ -30,6 +30,11 @@ class FileNode:
     imports: List[str] = field(default_factory=list)
     imported_by: List[str] = field(default_factory=list)
     external_imports: List[str] = field(default_factory=list)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
 
 
 @dataclass

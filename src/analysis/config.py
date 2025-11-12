@@ -52,6 +52,10 @@ class AnalysisConfig:
     # Cache settings
     cache_ttl_seconds: int = 3600
     
+    # Incremental analysis
+    enable_incremental: bool = True
+    persistence_path: str = ".documee/analysis"
+    
     @classmethod
     def from_dict(cls, config_dict: dict) -> 'AnalysisConfig':
         """Create AnalysisConfig from dictionary."""
@@ -67,5 +71,7 @@ class AnalysisConfig:
             max_parallel_files=analysis_config.get('max_parallel_files', 10),
             parse_timeout_seconds=analysis_config.get('parse_timeout_seconds', 5),
             enable_linters=analysis_config.get('enable_linters', False),
-            cache_ttl_seconds=analysis_config.get('cache_ttl_seconds', 3600)
+            cache_ttl_seconds=analysis_config.get('cache_ttl_seconds', 3600),
+            enable_incremental=analysis_config.get('enable_incremental', True),
+            persistence_path=analysis_config.get('persistence_path', '.documee/analysis')
         )

@@ -32,6 +32,8 @@ from .dependency_analyzer import (
     CircularDependency
 )
 from .persistence import PersistenceManager
+from .linter_integration import LinterIntegration
+from .notebook_analyzer import NotebookAnalyzer, NotebookCode, CodeCell
 
 __all__ = [
     'AnalysisEngine',
@@ -56,5 +58,9 @@ __all__ = [
     'FileNode',
     'DependencyEdge',
     'CircularDependency',
-    'PersistenceManager'
+    'PersistenceManager',
+    'LinterIntegration',
+    'NotebookAnalyzer',
+    'NotebookCode',
+    'CodeCell'
 ]

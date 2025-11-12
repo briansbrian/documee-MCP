@@ -33,6 +33,16 @@ class DetectedPattern:
     evidence: List[str] = field(default_factory=list)
     line_numbers: List[int] = field(default_factory=list)
     metadata: Dict[str, Any] = field(default_factory=dict)
+    
+    def to_dict(self) -> Dict[str, Any]:
+        """Convert to dictionary for JSON serialization."""
+        from dataclasses import asdict
+        return asdict(self)
+    
+    @classmethod
+    def from_dict(cls, data: Dict[str, Any]) -> 'DetectedPattern':
+        """Create from dictionary."""
+        return cls(**data)
 
 
 class BasePatternDetector(ABC):

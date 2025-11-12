@@ -183,7 +183,7 @@ class UnifiedCacheManager:
             CREATE TABLE IF NOT EXISTS analysis_cache (
                 key TEXT PRIMARY KEY,
                 data TEXT,
-                cached_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                cached_at INTEGER,
                 ttl INTEGER
             )
         """)
@@ -211,9 +211,10 @@ class UnifiedCacheManager:
             Estimated size in bytes
         """
         try:
-            # Serialize to JSON and measure
+            # Serialize to JSON and measure the actual string length
             json_str = json.dumps(data)
-            return sys.getsizeof(json_str)
+            # Use len() to get actual string size, not Python object overhead
+            return len(json_str.encode('utf-8'))
         except Exception:
             # Fallback to sys.getsizeof
             return sys.getsizeof(data)
@@ -273,11 +274,14 @@ class UnifiedCacheManager:
                     row = await cursor.fetchone()
                     if row:
                         data_json, ttl, cached_at = row
+                        logger.debug(f"SQLite row found for {key}: ttl={ttl}, cached_at={cached_at}")
                         
                         # Check if expired
-                        if ttl > 0:
-                            cached_time = datetime.fromisoformat(cached_at).timestamp()
-                            if time.time() - cached_time > ttl:
+                        if ttl > 0 and cached_at:
+                            current_time = time.time()
+                            age = current_time - cached_at
+                            logger.debug(f"Cache age: {age:.2f}s, TTL: {ttl}s")
+                            if age > ttl:
                                 logger.debug(f"Cache expired (sqlite): {key}")
                                 self.stats["sqlite_misses"] += 1
                                 return None
@@ -290,8 +294,10 @@ class UnifiedCacheManager:
                         await self._promote_to_memory(key, data)
                         
                         return data
+                    else:
+                        logger.debug(f"No SQLite row found for {key}")
             except Exception as e:
-                logger.error(f"Error reading from SQLite cache: {e}")
+                logger.error(f"Error reading from SQLite cache: {e}", exc_info=True)
         
         self.stats["sqlite_misses"] += 1
         
@@ -343,12 +349,13 @@ class UnifiedCacheManager:
         
         try:
             data_json = json.dumps(data)
+            cached_at = int(time.time())
             await self.sqlite_conn.execute(
                 """
                 INSERT OR REPLACE INTO analysis_cache (key, data, cached_at, ttl)
-                VALUES (?, ?, CURRENT_TIMESTAMP, ?)
+                VALUES (?, ?, ?, ?)
                 """,
-                (key, data_json, ttl)
+                (key, data_json, cached_at, ttl)
             )
             await self.sqlite_conn.commit()
             logger.debug(f"Promoted to sqlite: {key}")
@@ -375,12 +382,13 @@ class UnifiedCacheManager:
         if self.sqlite_conn:
             try:
                 data_json = json.dumps(data)
+                cached_at = int(time.time())
                 await self.sqlite_conn.execute(
                     """
                     INSERT OR REPLACE INTO analysis_cache (key, data, cached_at, ttl)
-                    VALUES (?, ?, CURRENT_TIMESTAMP, ?)
+                    VALUES (?, ?, ?, ?)
                     """,
-                    (key, data_json, ttl)
+                    (key, data_json, cached_at, ttl)
                 )
                 await self.sqlite_conn.commit()
                 logger.debug(f"Stored in sqlite: {key}")
@@ -462,7 +470,9 @@ class UnifiedCacheManager:
                 logger.error(f"Error storing session in SQLite: {e}")
     
     async def get_resource(self, key: str) -> Optional[Any]:
-        """Get MCP resource data.
+        """Get MCP resource data from memory or SQLite.
+        
+        Checks memory first, then SQLite for persistence across sessions.
         
         Args:
             key: Resource key
@@ -470,22 +480,59 @@ class UnifiedCacheManager:
         Returns:
             Resource data or None if not found
         """
+        # Check memory first
         resource = self.resources.get(key)
         if resource:
-            logger.debug(f"Resource hit: {key}")
-        else:
-            logger.debug(f"Resource miss: {key}")
-        return resource
+            logger.info(f"Resource hit (memory): {key}")
+            return resource
+        
+        # Check SQLite for persistence
+        if self.sqlite_conn:
+            try:
+                cursor = await self.sqlite_conn.execute(
+                    "SELECT data FROM analysis_cache WHERE key = ?",
+                    (f"resource:{key}",)
+                )
+                row = await cursor.fetchone()
+                if row:
+                    resource = json.loads(row[0])
+                    # Promote to memory
+                    self.resources[key] = resource
+                    logger.info(f"Resource hit (SQLite): {key}")
+                    return resource
+            except Exception as e:
+                logger.error(f"Error retrieving resource from SQLite: {e}")
+        
+        logger.info(f"Resource miss: {key}")
+        return None
     
     async def set_resource(self, key: str, data: Any):
-        """Store MCP resource data.
+        """Store MCP resource data in memory and SQLite.
+        
+        Stores in both memory for fast access and SQLite for persistence.
         
         Args:
             key: Resource key
             data: Resource data
         """
+        # Store in memory
         self.resources[key] = data
-        logger.debug(f"Resource stored: {key}")
+        
+        # Store in SQLite for persistence
+        if self.sqlite_conn:
+            try:
+                json_data = json.dumps(data)
+                await self.sqlite_conn.execute(
+                    """INSERT OR REPLACE INTO analysis_cache (key, data, cached_at, ttl)
+                       VALUES (?, ?, ?, ?)""",
+                    (f"resource:{key}", json_data, int(time.time()), 86400)  # 24 hour TTL
+                )
+                await self.sqlite_conn.commit()
+                logger.info(f"Resource stored (memory + SQLite): {key}")
+            except Exception as e:
+                logger.error(f"Error storing resource in SQLite: {e}")
+        else:
+            logger.info(f"Resource stored (memory only): {key}")
     
     async def get_stats(self) -> dict:
         """Get cache statistics.

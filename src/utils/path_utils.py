@@ -6,10 +6,10 @@ from pathlib import Path
 
 def sanitize_path(path: str) -> str:
     """
-    Sanitize a path by removing directory traversal attempts and normalizing it.
+    Sanitize a path by blocking directory traversal attempts and normalizing it.
     
-    This function removes ".." and "~" characters to prevent directory traversal attacks,
-    converts the path to an absolute path, and normalizes it for the current OS.
+    This function detects ".." in relative paths to prevent directory traversal attacks,
+    converts the path to an absolute path, and validates it exists.
     
     Args:
         path: The path string to sanitize
@@ -18,20 +18,30 @@ def sanitize_path(path: str) -> str:
         Sanitized absolute path string
         
     Raises:
-        ValueError: If the path is empty or invalid after sanitization
+        ValueError: If the path contains directory traversal attempts or is invalid
         
     Examples:
         >>> sanitize_path("./src")
         "C:\\Users\\project\\src"  # On Windows
         
         >>> sanitize_path("../../../etc/passwd")
-        "C:\\Users\\project\\etc\\passwd"  # Traversal attempts removed
+        ValueError: Directory traversal detected in path
+        
+        >>> sanitize_path("C:\\Users\\project")
+        "C:\\Users\\project"  # Absolute paths are allowed
     """
     if not path:
         raise ValueError("Path cannot be empty")
     
-    # Remove directory traversal attempts
-    path = path.replace("..", "").replace("~", "")
+    # Check for directory traversal attempts in relative paths
+    # Only block ".." if it's in a relative path (not an absolute path)
+    if not os.path.isabs(path):
+        if ".." in path:
+            raise ValueError(f"Directory traversal detected in path: {path}")
+    
+    # Block tilde expansion for security
+    if "~" in path:
+        raise ValueError(f"Tilde expansion not allowed in path: {path}")
     
     # Handle both Windows backslashes and forward slashes
     # Normalize path separators for current OS

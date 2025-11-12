@@ -1,0 +1,113 @@
+# {{ lesson.title }}
+
+**Difficulty**: {{ lesson.difficulty }} | **Duration**: {{ lesson.duration_minutes|format_duration }}
+
+## Learning Objectives
+
+{% for objective in lesson.learning_objectives %}
+- {{ objective }}
+{% endfor %}
+
+{% if lesson.prerequisites %}
+## Prerequisites
+
+{% for prereq in lesson.prerequisites %}
+- {{ prereq }}
+{% endfor %}
+{% endif %}
+
+## Introduction
+
+{{ lesson.content.introduction }}
+
+## Explanation
+
+{{ lesson.content.explanation }}
+
+## Code Example
+
+```{{ lesson.content.code_example.language }}
+{{ lesson.content.code_example.code }}
+```
+
+{% if lesson.content.code_example.annotations %}
+### Code Annotations
+
+{% for line_num, annotation in lesson.content.code_example.annotations.items() %}
+**Line {{ line_num }}**: {{ annotation }}
+{% endfor %}
+{% endif %}
+
+## Walkthrough
+
+{{ lesson.content.walkthrough }}
+
+## Summary
+
+{{ lesson.content.summary }}
+
+{% if lesson.content.further_reading %}
+## Further Reading
+
+{% for resource in lesson.content.further_reading %}
+- {{ resource }}
+{% endfor %}
+{% endif %}
+
+{% if lesson.exercises %}
+## Exercises
+
+{% for exercise in lesson.exercises %}
+### {{ exercise.title }}
+
+{{ exercise.description }}
+
+**Difficulty**: {{ exercise.difficulty }} | **Estimated Time**: {{ exercise.estimated_minutes }} minutes
+
+#### Instructions
+
+{% for instruction in exercise.instructions %}
+{{ loop.index }}. {{ instruction }}
+{% endfor %}
+
+#### Starter Code
+
+```{{ lesson.content.code_example.language }}
+{{ exercise.starter_code }}
+```
+
+{% if exercise.hints %}
+#### Hints
+
+{% for hint in exercise.hints %}
+<details>
+<summary>Hint {{ loop.index }}</summary>
+
+{{ hint }}
+
+</details>
+{% endfor %}
+{% endif %}
+
+{% if exercise.test_cases %}
+#### Test Cases
+
+{% for test in exercise.test_cases %}
+**Test {{ loop.index }}**: {{ test.description }}
+- Input: `{{ test.input }}`
+- Expected: `{{ test.expected_output }}`
+{% endfor %}
+{% endif %}
+
+---
+
+{% endfor %}
+{% endif %}
+
+{% if lesson.tags %}
+## Tags
+
+{% for tag in lesson.tags %}
+`{{ tag }}`{% if not loop.last %} {% endif %}
+{% endfor %}
+{% endif %}

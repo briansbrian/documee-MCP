@@ -1017,6 +1017,538 @@ async def analyze_codebase_tool(
         raise ValueError(f"Failed to analyze codebase: {str(e)}")
 
 
-if __name__ == "__main__":
-    # Run with stdio transport (default)
-    mcp.run()
+@mcp.tool
+async def export_course(
+    codebase_id: str,
+    format: str = "mkdocs",
+    output_dir: Optional[str] = None,
+    ctx: Context = None
+) -> dict:
+    """
+    Export a course from analyzed codebase to specified format.
+    
+    Generates a complete course structure from codebase analysis and exports
+    it to the specified format (MkDocs, Next.js, JSON, Markdown, or PDF).
+    The course includes modules, lessons with content, and exercises.
+    
+    Args:
+        codebase_id: Unique identifier from scan_codebase (required)
+                    You must run analyze_codebase_tool first to get analysis data
+        format: Export format (default: "mkdocs")
+               Options: "mkdocs", "nextjs", "json", "markdown", "pdf"
+        output_dir: Output directory path (optional)
+                   If not provided, uses "./output/{codebase_id}_course"
+        ctx: FastMCP context (injected automatically)
+    
+    Returns:
+        Dictionary with:
+        - export_path: Path to exported course
+        - format: Export format used
+        - statistics: Export statistics (modules, lessons, exercises)
+        - codebase_id: Codebase identifier
+    
+    Raises:
+        ValueError: If codebase has not been analyzed or format is invalid
+        RuntimeError: If server not initialized or export fails
+    
+    Examples:
+        Export to MkDocs:
+        {"codebase_id": "a1b2c3d4e5f6g7h8"}
+        
+        Export to JSON:
+        {"codebase_id": "a1b2c3d4e5f6g7h8", "format": "json"}
+        
+        Export to custom directory:
+        {"codebase_id": "a1b2c3d4e5f6g7h8", "format": "mkdocs", "output_dir": "./my_course"}
+    """
+    start_time = time.time()
+    
+    # Access app context
+    if not app_context:
+        raise RuntimeError("Server not initialized")
+    
+    cache_manager = app_context.cache_manager
+    config = app_context.config
+    
+    # Validate input
+    if not codebase_id or not codebase_id.strip():
+        raise ValueError("codebase_id parameter is required and cannot be empty")
+    
+    # Validate format
+    from src.course.exporters.export_manager import ExportManager
+    valid_formats = ExportManager.SUPPORTED_FORMATS
+    format = format.lower()
+    if format not in valid_formats:
+        raise ValueError(
+            f"Invalid format: {format}. Supported formats: {', '.join(valid_formats)}"
+        )
+    
+    # Log tool invocation
+    logger.info(
+        f"Tool invoked: export_course with arguments: "
+        f"codebase_id={codebase_id}, format={format}, output_dir={output_dir}"
+    )
+    
+    try:
+        # Get analysis from cache
+        cache_key = f"codebase:{codebase_id}"
+        cached_analysis = await cache_manager.get_analysis(cache_key)
+        
+        if not cached_analysis:
+            raise ValueError(
+                f"Codebase not analyzed. Call analyze_codebase_tool with codebase_id='{codebase_id}' first."
+            )
+        
+        # Convert to CodebaseAnalysis if needed
+        from src.models import CodebaseAnalysis
+        if isinstance(cached_analysis, dict):
+            analysis = CodebaseAnalysis.from_dict(cached_analysis)
+        else:
+            analysis = cached_analysis
+        
+        # Generate course structure
+        from src.course.structure_generator import CourseStructureGenerator
+        from src.course.content_generator import LessonContentGenerator
+        from src.course.exercise_generator import ExerciseGenerator
+        from src.course.config import CourseConfig
+        from src.course.exporters.export_manager import ExportManager
+        
+        course_config = CourseConfig()
+        structure_gen = CourseStructureGenerator(course_config)
+        
+        logger.info(f"Generating course structure for codebase {codebase_id}")
+        course_outline = structure_gen.generate_course_structure(analysis)
+        
+        # Generate lesson content for each lesson
+        content_gen = LessonContentGenerator(course_config)
+        exercise_gen = ExerciseGenerator(course_config)
+        
+        for module in course_outline.modules:
+            for lesson in module.lessons:
+                # Get file analysis for this lesson
+                file_analysis = analysis.file_analyses.get(lesson.file_path)
+                if file_analysis:
+                    # Generate lesson content
+                    lesson.content = content_gen.generate_lesson_content(file_analysis)
+                    
+                    # Generate exercises (1-3 per lesson based on complexity)
+                    patterns = [p for p in file_analysis.patterns if p.confidence > 0.7]
+                    num_exercises = min(3, max(1, len(patterns)))
+                    
+                    for i, pattern in enumerate(patterns[:num_exercises]):
+                        exercise = exercise_gen.generate_exercise(pattern, file_analysis)
+                        lesson.exercises.append(exercise)
+        
+        # Set output directory
+        if not output_dir:
+            output_dir = f"./output/{codebase_id}_course"
+        
+        # Export course
+        export_manager = ExportManager(course_config)
+        logger.info(f"Exporting course to {format} format at {output_dir}")
+        export_path = export_manager.export(course_outline, output_dir, format)
+        
+        # Calculate statistics
+        total_modules = len(course_outline.modules)
+        total_lessons = sum(len(m.lessons) for m in course_outline.modules)
+        total_exercises = sum(
+            len(lesson.exercises) 
+            for module in course_outline.modules 
+            for lesson in module.lessons
+        )
+        
+        result = {
+            'export_path': export_path,
+            'format': format,
+            'statistics': {
+                'modules': total_modules,
+                'lessons': total_lessons,
+                'exercises': total_exercises,
+                'duration_hours': course_outline.total_duration_hours
+            },
+            'codebase_id': codebase_id
+        }
+        
+        # Log completion
+        duration_ms = (time.time() - start_time) * 1000
+        logger.info(
+            f"Tool completed: export_course in {duration_ms:.2f}ms "
+            f"({total_modules} modules, {total_lessons} lessons, {total_exercises} exercises)"
+        )
+        
+        # Log slow operations
+        if config.log_slow_operations and duration_ms > config.slow_operation_threshold_ms:
+            logger.warning(f"Slow operation detected: export_course took {duration_ms:.2f}ms")
+        
+        return result
+        
+    except ValueError as e:
+        raise ValueError(str(e))
+    except Exception as e:
+        logger.error(f"Error exporting course for codebase {codebase_id}: {e}")
+        raise RuntimeError(f"Failed to export course: {str(e)}")
+
+
+@mcp.tool
+async def generate_lesson_outline(
+    file_path: str,
+    ctx: Context = None
+) -> dict:
+    """
+    Generate a lesson outline from a single file.
+    
+    Analyzes a file and generates a structured lesson outline with learning
+    objectives, key concepts, code examples, and suggested exercises. Useful
+    for previewing lesson content before generating a full course.
+    
+    Args:
+        file_path: Path to file to generate lesson from (required)
+                  Supported extensions: .py, .js, .jsx, .ts, .tsx, .ipynb
+                  Examples:
+                  - Relative path: "src/components/Button.tsx"
+                  - Absolute path (Windows): "C:\\Users\\username\\project\\src\\main.py"
+                  - Absolute path (Unix): "/home/username/project/src/main.py"
+        ctx: FastMCP context (injected automatically)
+    
+    Returns:
+        Dictionary with:
+        - title: Lesson title
+        - file_path: Path to source file
+        - learning_objectives: List of learning objectives (3-5)
+        - key_concepts: List of key concepts covered
+        - difficulty: Lesson difficulty (beginner, intermediate, advanced)
+        - estimated_duration_minutes: Estimated lesson duration
+        - code_examples: List of code example descriptions
+        - suggested_exercises: List of suggested exercise descriptions
+        - patterns: Detected patterns in the file
+        - teaching_value_score: Teaching value score (0.0-1.0)
+    
+    Raises:
+        ValueError: If file_path is empty or file doesn't exist
+        RuntimeError: If server not initialized or analysis fails
+    
+    Examples:
+        Generate lesson outline:
+        {"file_path": "src/components/Button.tsx"}
+        
+        Generate from Python file:
+        {"file_path": "src/utils/helpers.py"}
+    """
+    start_time = time.time()
+    
+    # Access app context
+    if not app_context:
+        raise RuntimeError("Server not initialized")
+    
+    analysis_engine = app_context.analysis_engine
+    config = app_context.config
+    
+    # Validate input
+    if not file_path or not file_path.strip():
+        raise ValueError("file_path parameter is required and cannot be empty")
+    
+    # Check if file exists
+    from pathlib import Path
+    if not Path(file_path).exists():
+        raise ValueError(f"File not found: {file_path}")
+    
+    # Log tool invocation
+    logger.info(f"Tool invoked: generate_lesson_outline with arguments: file_path={file_path}")
+    
+    try:
+        # Analyze file
+        file_analysis = await analysis_engine.analyze_file(file_path, force=False)
+        
+        # Generate lesson content
+        from src.course.content_generator import LessonContentGenerator
+        from src.course.config import CourseConfig
+        
+        course_config = CourseConfig()
+        content_gen = LessonContentGenerator(course_config)
+        
+        # Generate learning objectives
+        objectives = content_gen.generate_objectives(file_analysis)
+        
+        # Extract key concepts from patterns
+        key_concepts = list(set(
+            pattern.pattern_type.replace('_', ' ').title()
+            for pattern in file_analysis.patterns
+            if pattern.confidence > 0.7
+        ))
+        
+        # Determine difficulty
+        complexity = file_analysis.complexity_metrics.avg_complexity if hasattr(file_analysis.complexity_metrics, 'avg_complexity') else 0
+        if complexity < 5:
+            difficulty = 'beginner'
+        elif complexity < 15:
+            difficulty = 'intermediate'
+        else:
+            difficulty = 'advanced'
+        
+        # Estimate duration (5-15 minutes based on complexity)
+        estimated_duration = min(15, max(5, complexity))
+        
+        # Generate code example descriptions
+        code_examples = []
+        for func in file_analysis.symbol_info.functions[:3]:  # Top 3 functions
+            code_examples.append({
+                'name': func.name,
+                'description': f"Function demonstrating {func.name}",
+                'lines': f"{func.start_line}-{func.end_line}"
+            })
+        
+        for cls in file_analysis.symbol_info.classes[:2]:  # Top 2 classes
+            code_examples.append({
+                'name': cls.name,
+                'description': f"Class demonstrating {cls.name}",
+                'lines': f"{cls.start_line}-{cls.end_line}"
+            })
+        
+        # Generate suggested exercises
+        suggested_exercises = []
+        for pattern in file_analysis.patterns[:3]:  # Top 3 patterns
+            suggested_exercises.append({
+                'pattern': pattern.pattern_type,
+                'description': f"Practice implementing {pattern.pattern_type.replace('_', ' ')}",
+                'difficulty': difficulty
+            })
+        
+        # Generate title from file name
+        import os
+        filename = os.path.basename(file_path)
+        title = filename.replace('_', ' ').replace('-', ' ').replace('.py', '').replace('.js', '').replace('.ts', '').replace('.tsx', '').replace('.jsx', '').title()
+        
+        result = {
+            'title': title,
+            'file_path': file_path,
+            'learning_objectives': objectives,
+            'key_concepts': key_concepts,
+            'difficulty': difficulty,
+            'estimated_duration_minutes': estimated_duration,
+            'code_examples': code_examples,
+            'suggested_exercises': suggested_exercises,
+            'patterns': [
+                {
+                    'type': p.pattern_type,
+                    'confidence': p.confidence,
+                    'evidence': p.evidence
+                }
+                for p in file_analysis.patterns
+            ],
+            'teaching_value_score': file_analysis.teaching_value.total_score
+        }
+        
+        # Log completion
+        duration_ms = (time.time() - start_time) * 1000
+        logger.info(f"Tool completed: generate_lesson_outline in {duration_ms:.2f}ms")
+        
+        # Log slow operations
+        if config.log_slow_operations and duration_ms > config.slow_operation_threshold_ms:
+            logger.warning(f"Slow operation detected: generate_lesson_outline took {duration_ms:.2f}ms")
+        
+        return result
+        
+    except FileNotFoundError:
+        raise ValueError(f"File not found: {file_path}")
+    except Exception as e:
+        logger.error(f"Error generating lesson outline for {file_path}: {e}")
+        raise RuntimeError(f"Failed to generate lesson outline: {str(e)}")
+
+
+@mcp.tool
+async def create_exercise(
+    pattern_type: str,
+    difficulty: str = "intermediate",
+    codebase_id: Optional[str] = None,
+    ctx: Context = None
+) -> dict:
+    """
+    Create a coding exercise for a specific pattern type.
+    
+    Generates a coding exercise with starter code, solution, hints, and test
+    cases for a specific pattern type. If codebase_id is provided, finds an
+    example from the analyzed codebase. Otherwise, generates a generic exercise.
+    
+    Args:
+        pattern_type: Type of pattern to create exercise for (required)
+                     Examples: "react_component", "api_route", "database_query",
+                              "authentication", "error_handling", "async_operation"
+        difficulty: Exercise difficulty (default: "intermediate")
+                   Options: "beginner", "intermediate", "advanced"
+        codebase_id: Optional codebase ID to find pattern examples from
+                    If provided, uses actual code from the codebase
+        ctx: FastMCP context (injected automatically)
+    
+    Returns:
+        Dictionary with Exercise containing:
+        - exercise_id: Unique exercise identifier
+        - title: Exercise title
+        - description: Exercise description
+        - difficulty: Difficulty level
+        - estimated_minutes: Estimated completion time
+        - instructions: Step-by-step instructions
+        - starter_code: Code template with TODOs
+        - solution_code: Complete solution code
+        - hints: Progressive hints (3-5)
+        - test_cases: Test cases for validation
+        - learning_objectives: Learning objectives (3-5)
+        - pattern_type: Pattern type
+    
+    Raises:
+        ValueError: If pattern_type is empty or invalid
+        RuntimeError: If server not initialized or generation fails
+    
+    Examples:
+        Create React component exercise:
+        {"pattern_type": "react_component"}
+        
+        Create advanced API route exercise:
+        {"pattern_type": "api_route", "difficulty": "advanced"}
+        
+        Create exercise from codebase:
+        {"pattern_type": "database_query", "codebase_id": "a1b2c3d4e5f6g7h8"}
+    """
+    start_time = time.time()
+    
+    # Access app context
+    if not app_context:
+        raise RuntimeError("Server not initialized")
+    
+    cache_manager = app_context.cache_manager
+    config = app_context.config
+    
+    # Validate input
+    if not pattern_type or not pattern_type.strip():
+        raise ValueError("pattern_type parameter is required and cannot be empty")
+    
+    # Validate difficulty
+    valid_difficulties = ['beginner', 'intermediate', 'advanced']
+    difficulty = difficulty.lower()
+    if difficulty not in valid_difficulties:
+        raise ValueError(
+            f"Invalid difficulty: {difficulty}. Valid options: {', '.join(valid_difficulties)}"
+        )
+    
+    # Log tool invocation
+    logger.info(
+        f"Tool invoked: create_exercise with arguments: "
+        f"pattern_type={pattern_type}, difficulty={difficulty}, codebase_id={codebase_id}"
+    )
+    
+    try:
+        from src.course.exercise_generator import ExerciseGenerator
+        from src.course.config import CourseConfig
+        from src.models import DetectedPattern, FileAnalysis
+        
+        course_config = CourseConfig()
+        exercise_gen = ExerciseGenerator(course_config)
+        
+        # If codebase_id provided, find pattern example from codebase
+        pattern = None
+        file_analysis = None
+        
+        if codebase_id:
+            cache_key = f"codebase:{codebase_id}"
+            cached_analysis = await cache_manager.get_analysis(cache_key)
+            
+            if cached_analysis:
+                # Find a file with the requested pattern
+                from src.models import CodebaseAnalysis
+                if isinstance(cached_analysis, dict):
+                    analysis = CodebaseAnalysis.from_dict(cached_analysis)
+                else:
+                    analysis = cached_analysis
+                
+                # Search for pattern in file analyses
+                for file_path, file_anal in analysis.file_analyses.items():
+                    for p in file_anal.patterns:
+                        if p.pattern_type == pattern_type and p.confidence > 0.7:
+                            pattern = p
+                            file_analysis = file_anal
+                            break
+                    if pattern:
+                        break
+        
+        # If no pattern found or no codebase_id, create generic pattern
+        if not pattern:
+            pattern = DetectedPattern(
+                pattern_type=pattern_type,
+                file_path=f"example_{pattern_type}.py",
+                confidence=0.9,
+                evidence=[f"Generic {pattern_type} example"],
+                line_numbers=[],
+                metadata={}
+            )
+            
+            # Create minimal file analysis
+            from src.models import SymbolInfo, TeachingValueScore, ComplexityMetrics
+            
+            # Determine complexity based on difficulty
+            if difficulty == 'beginner':
+                avg_complexity = 2.0
+            elif difficulty == 'intermediate':
+                avg_complexity = 8.0
+            else:
+                avg_complexity = 15.0
+            
+            file_analysis = FileAnalysis(
+                file_path=f"example_{pattern_type}.py",
+                language="python",
+                symbol_info=SymbolInfo(functions=[], classes=[], imports=[], exports=[]),
+                patterns=[pattern],
+                teaching_value=TeachingValueScore(
+                    total_score=0.8,
+                    documentation_score=0.8,
+                    complexity_score=0.7,
+                    pattern_score=0.9,
+                    structure_score=0.8,
+                    explanation="Generic exercise example",
+                    factors={}
+                ),
+                complexity_metrics=ComplexityMetrics(
+                    avg_complexity=avg_complexity,
+                    max_complexity=int(avg_complexity * 1.5),
+                    min_complexity=int(avg_complexity * 0.5),
+                    high_complexity_functions=[],
+                    trivial_functions=[],
+                    avg_nesting_depth=2.0
+                ),
+                documentation_coverage=0.8,
+                linter_issues=[],
+                has_errors=False,
+                errors=[],
+                analyzed_at="",
+                cache_hit=False,
+                is_notebook=False
+            )
+        
+        # Generate exercise
+        exercise = exercise_gen.generate_exercise(pattern, file_analysis)
+        
+        # Override difficulty if specified
+        exercise.difficulty = difficulty
+        
+        # Adjust estimated time based on difficulty
+        if difficulty == 'beginner':
+            exercise.estimated_minutes = min(15, exercise.estimated_minutes)
+        elif difficulty == 'advanced':
+            exercise.estimated_minutes = max(30, exercise.estimated_minutes)
+        
+        # Convert to dict
+        from dataclasses import asdict
+        result = asdict(exercise)
+        result['pattern_type'] = pattern_type
+        
+        # Log completion
+        duration_ms = (time.time() - start_time) * 1000
+        logger.info(f"Tool completed: create_exercise in {duration_ms:.2f}ms")
+        
+        # Log slow operations
+        if config.log_slow_operations and duration_ms > config.slow_operation_threshold_ms:
+            logger.warning(f"Slow operation detected: create_exercise took {duration_ms:.2f}ms")
+        
+        return result
+        
+    except Exception as e:
+        logger.error(f"Error creating exercise for pattern {pattern_type}: {e}")
+        raise RuntimeError(f"Failed to create exercise: {str(e)}")

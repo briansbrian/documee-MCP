@@ -1,0 +1,61 @@
+# Exercise: {{ exercise.title }}
+
+{{ exercise.description }}
+
+**Difficulty**: {{ exercise.difficulty }} | **Estimated Time**: {{ exercise.estimated_minutes }} minutes
+
+## Learning Objectives
+
+{% for objective in exercise.learning_objectives %}
+- {{ objective }}
+{% endfor %}
+
+## Instructions
+
+{% for instruction in exercise.instructions %}
+{{ loop.index }}. {{ instruction }}
+{% endfor %}
+
+## Starter Code
+
+```python
+{{ exercise.starter_code }}
+```
+
+{% if exercise.hints %}
+## Hints
+
+{% for hint in exercise.hints %}
+<details>
+<summary>Hint {{ loop.index }}</summary>
+
+{{ hint }}
+
+</details>
+{% endfor %}
+{% endif %}
+
+{% if exercise.test_cases %}
+## Test Cases
+
+Your solution should pass the following test cases:
+
+{% for test in exercise.test_cases %}
+### Test {{ loop.index }}: {{ test.description }}
+
+- **Input**: `{{ test.input }}`
+- **Expected Output**: `{{ test.expected_output }}`
+
+{% endfor %}
+{% endif %}
+
+## Solution
+
+<details>
+<summary>Click to reveal solution</summary>
+
+```python
+{{ exercise.solution_code }}
+```
+
+</details>

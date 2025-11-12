@@ -12,6 +12,9 @@ from .models import (
 )
 
 from .config import CourseConfig
+from .structure_generator import CourseStructureGenerator
+from .content_generator import LessonContentGenerator
+from .exercise_generator import ExerciseGenerator
 
 __all__ = [
     "CourseOutline",
@@ -23,4 +26,7 @@ __all__ = [
     "Exercise",
     "TestCase",
     "CourseConfig",
+    "CourseStructureGenerator",
+    "LessonContentGenerator",
+    "ExerciseGenerator",
 ]

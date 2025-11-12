@@ -1,0 +1,41 @@
+# {{ module.title }}
+
+{{ module.description }}
+
+**Difficulty**: {{ module.difficulty }} | **Duration**: {{ module.duration_hours }} hours
+
+## Learning Objectives
+
+{% for objective in module.learning_objectives %}
+- {{ objective }}
+{% endfor %}
+
+## Lessons
+
+{% for lesson in module.lessons %}
+### {{ loop.index }}. {{ lesson.title }}
+
+{{ lesson.description }}
+
+- **Difficulty**: {{ lesson.difficulty }}
+- **Duration**: {{ lesson.duration_minutes|format_duration }}
+- **Teaching Value**: {{ "%.2f"|format(lesson.teaching_value) }}
+
+{% if lesson.concepts %}
+**Key Concepts**: {% for concept in lesson.concepts %}{{ concept }}{% if not loop.last %}, {% endif %}{% endfor %}
+{% endif %}
+
+{% endfor %}
+
+## Module Overview
+
+This module contains {{ module.lessons|length }} lesson{% if module.lessons|length != 1 %}s{% endif %} covering:
+
+{% for lesson in module.lessons %}
+- **{{ lesson.title }}**: {{ lesson.description }}
+{% endfor %}
+
+---
+
+**Total Duration**: {{ module.duration_hours }} hours
+**Difficulty Level**: {{ module.difficulty }}

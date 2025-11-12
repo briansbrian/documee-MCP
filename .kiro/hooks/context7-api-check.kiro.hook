@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Context7 API Fact Checker",
+  "description": "Monitors code files for changes and uses context7 to verify that API usage is correct and follows the latest best practices",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "Review the changed code files and use context7 to fact-check that all API usage is correct and follows the latest API documentation. Verify: 1) API endpoints are current and not deprecated, 2) Method signatures match the latest version, 3) Authentication patterns are up-to-date, 4) Best practices are followed. Report any discrepancies or outdated usage patterns found."
+  }
+}

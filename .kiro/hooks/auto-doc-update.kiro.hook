@@ -1,0 +1,13 @@
+{
+  "enabled": true,
+  "name": "Auto Documentation Update",
+  "description": "After every task is complete, automatically create or update hierarchical documentation in the docs/ to help LLMs and developers understand project structure, features, and logic",
+  "version": "1",
+  "when": {
+    "type": "userTriggered"
+  },
+  "then": {
+    "type": "askAgent",
+    "prompt": "A task has been completed and files have been modified. Review the recent changes and update the hierarchical documentation in the docs folder. Ensure documentation helps LLMs and developers understand the project structure, features, and logic for updates and bug fixes. Keep documentation precise with minimal code examples. Update or create relevant documentation files in docs/ to reflect the changes."
+  }
+}

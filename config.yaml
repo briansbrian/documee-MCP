@@ -1,0 +1,52 @@
+# MCP Server Configuration
+# This file contains default settings for the codebase-to-course-mcp server
+
+server:
+  name: codebase-to-course-mcp
+  version: 1.0.0
+  transport: stdio
+
+cache:
+  memory:
+    max_size_mb: 500
+  sqlite:
+    enabled: true
+    path: cache_db/cache.db
+  redis:
+    enabled: false
+    url: null
+
+analysis:
+  max_file_size_mb: 10
+  max_files_per_scan: 10000
+  max_parallel_reads: 10
+  scan_timeout_seconds: 30
+
+security:
+  allowed_paths: []
+  max_depth: 10
+  blocked_patterns:
+    - node_modules
+    - .git
+    - dist
+    - build
+    - .next
+    - __pycache__
+    - venv
+    - env
+    - .venv
+    - target
+    - out
+    - coverage
+    - .pytest_cache
+
+performance:
+  enable_profiling: false
+  log_slow_operations: true
+  slow_operation_threshold_ms: 1000
+
+logging:
+  level: INFO
+  file: server.log
+  max_size_mb: 10
+  backup_count: 3

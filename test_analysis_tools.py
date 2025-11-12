@@ -144,7 +144,7 @@ async def test_analysis_mcp_tools():
                 try:
                     result = await session.call_tool(
                         "analyze_file",
-                        arguments={"file_path": test_file_path}
+                        arguments={"file_path": test_file_path, "force": True}
                     )
                     
                     result_data = json.loads(result.content[0].text)
@@ -255,7 +255,7 @@ async def test_analysis_mcp_tools():
                 try:
                     result = await session.call_tool(
                         "score_teaching_value",
-                        arguments={"file_path": test_file_path}
+                        arguments={"file_path": test_file_path, "force": True}
                     )
                     
                     result_data = json.loads(result.content[0].text)
@@ -327,7 +327,7 @@ async def test_analysis_mcp_tools():
                         
                         result = await session.call_tool(
                             "analyze_codebase_tool",
-                            arguments={"codebase_id": codebase_id, "incremental": True}
+                            arguments={"codebase_id": codebase_id, "incremental": False, "use_cache": False}
                         )
                         
                         result_data = json.loads(result.content[0].text)

@@ -193,6 +193,22 @@ class SymbolExtractor:
                 class_info = self._extract_python_class(node)
                 if class_info:
                     symbols.classes.append(class_info)
+            
+            elif node.type == 'decorated_definition':
+                # Handle decorated functions and classes
+                for child in node.children:
+                    if child.type == 'function_definition':
+                        func_info = self._extract_python_function(child)
+                        if func_info:
+                            # Add decorators from parent
+                            func_info.decorators = self._extract_python_decorators(child)
+                            symbols.functions.append(func_info)
+                    elif child.type == 'class_definition':
+                        class_info = self._extract_python_class(child)
+                        if class_info:
+                            # Add decorators from parent
+                            class_info.decorators = self._extract_python_decorators(child)
+                            symbols.classes.append(class_info)
         
         logger.debug(
             f"Extracted {len(symbols.functions)} functions, "

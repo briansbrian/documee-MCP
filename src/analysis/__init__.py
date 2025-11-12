@@ -24,6 +24,19 @@ from .pattern_detector import (
     DatabasePatternDetector,
     AuthPatternDetector
 )
+from .language_pattern_detector import (
+    PythonPatternDetector,
+    JavaScriptPatternDetector
+)
+from .universal_language_detectors import (
+    JavaPatternDetector,
+    GoPatternDetector,
+    RustPatternDetector,
+    CppPatternDetector,
+    CSharpPatternDetector,
+    RubyPatternDetector,
+    PHPPatternDetector
+)
 from .dependency_analyzer import (
     DependencyAnalyzer,
     DependencyGraph,
@@ -53,6 +66,15 @@ __all__ = [
     'APIPatternDetector',
     'DatabasePatternDetector',
     'AuthPatternDetector',
+    'PythonPatternDetector',
+    'JavaScriptPatternDetector',
+    'JavaPatternDetector',
+    'GoPatternDetector',
+    'RustPatternDetector',
+    'CppPatternDetector',
+    'CSharpPatternDetector',
+    'RubyPatternDetector',
+    'PHPPatternDetector',
     'DependencyAnalyzer',
     'DependencyGraph',
     'FileNode',

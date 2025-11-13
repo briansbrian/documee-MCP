@@ -1022,6 +1022,10 @@ async def export_course(
     codebase_id: str,
     format: str = "mkdocs",
     output_dir: Optional[str] = None,
+    target_audience: str = "beginner",
+    course_focus: str = "full-stack",
+    max_duration_hours: Optional[float] = None,
+    min_teaching_value: float = 0.0,
     ctx: Context = None
 ) -> dict:
     """
@@ -1038,6 +1042,20 @@ async def export_course(
                Options: "mkdocs", "nextjs", "json", "markdown", "pdf"
         output_dir: Output directory path (optional)
                    If not provided, uses "./output/{codebase_id}_course"
+        target_audience: Target audience level (default: "beginner")
+                        Options: "beginner", "intermediate", "advanced", "mixed"
+                        Affects content complexity and explanation depth
+                        "beginner" provides the most detailed, accessible explanations
+        course_focus: Course focus area (default: "full-stack")
+                     Options: "patterns", "architecture", "best-practices", "full-stack"
+                     "full-stack" covers all aspects comprehensively
+        max_duration_hours: Maximum course duration in hours (optional, default: None)
+                           When None, includes all content without time limit
+                           Set a value (e.g., 10.0) to limit course length
+        min_teaching_value: Minimum teaching value score (0.0-1.0, default: 0.0)
+                           Only include files with teaching value above this threshold
+                           0.0 = include ALL content for maximum coverage
+                           Higher values (0.5+) = only high-quality lessons
         ctx: FastMCP context (injected automatically)
     
     Returns:
@@ -1046,20 +1064,24 @@ async def export_course(
         - format: Export format used
         - statistics: Export statistics (modules, lessons, exercises)
         - codebase_id: Codebase identifier
+        - config: Course configuration used
     
     Raises:
         ValueError: If codebase has not been analyzed or format is invalid
         RuntimeError: If server not initialized or export fails
     
     Examples:
-        Export to MkDocs:
+        Export comprehensive beginner course (uses defaults - ALL content):
         {"codebase_id": "a1b2c3d4e5f6g7h8"}
         
-        Export to JSON:
-        {"codebase_id": "a1b2c3d4e5f6g7h8", "format": "json"}
+        Export 10-hour beginner course:
+        {"codebase_id": "a1b2c3d4e5f6g7h8", "max_duration_hours": 10.0}
         
-        Export to custom directory:
-        {"codebase_id": "a1b2c3d4e5f6g7h8", "format": "mkdocs", "output_dir": "./my_course"}
+        Export only high-quality lessons:
+        {"codebase_id": "a1b2c3d4e5f6g7h8", "min_teaching_value": 0.7}
+        
+        Export advanced architecture course:
+        {"codebase_id": "a1b2c3d4e5f6g7h8", "target_audience": "advanced", "course_focus": "architecture"}
     """
     start_time = time.time()
     
@@ -1113,7 +1135,13 @@ async def export_course(
         from src.course.config import CourseConfig
         from src.course.exporters.export_manager import ExportManager
         
-        course_config = CourseConfig()
+        # Create course config with user-specified parameters
+        course_config = CourseConfig(
+            target_audience=target_audience,
+            course_focus=course_focus,
+            max_duration_hours=max_duration_hours,
+            min_teaching_value=min_teaching_value
+        )
         structure_gen = CourseStructureGenerator(course_config)
         
         logger.info(f"Generating course structure for codebase {codebase_id}")
@@ -1166,7 +1194,13 @@ async def export_course(
                 'exercises': total_exercises,
                 'duration_hours': course_outline.total_duration_hours
             },
-            'codebase_id': codebase_id
+            'codebase_id': codebase_id,
+            'config': {
+                'target_audience': target_audience,
+                'course_focus': course_focus,
+                'max_duration_hours': max_duration_hours,
+                'min_teaching_value': min_teaching_value
+            }
         }
         
         # Log completion
@@ -1552,3 +1586,9 @@ async def create_exercise(
     except Exception as e:
         logger.error(f"Error creating exercise for pattern {pattern_type}: {e}")
         raise RuntimeError(f"Failed to create exercise: {str(e)}")
+
+
+# Entry point for running the server
+if __name__ == "__main__":
+    import asyncio
+    mcp.run()

@@ -1,0 +1,54 @@
+site_name: Learn 067Ceb9A9D7Abebe
+site_description: A comprehensive course with 5 modules covering 48 files and 61 patterns.
+site_author: Documee Course Generator
+theme:
+  name: material
+  palette:
+    primary: indigo
+    accent: indigo
+  features:
+  - navigation.tabs
+  - navigation.sections
+  - navigation.expand
+  - search.suggest
+  - search.highlight
+  - content.code.copy
+  font:
+    text: Roboto
+    code: Roboto Mono
+plugins:
+- search
+- tags
+markdown_extensions:
+- pymdownx.highlight
+- pymdownx.superfences
+- pymdownx.details
+- admonition
+- toc
+nav:
+- Home: index.md
+- 'Module 1: Python Async Await':
+  - 'Incremental Updater: Python Async Await': module-1-python-async-await/incremental-updater-python-async-await.md
+  - 'Exercise Generator: Python Async Await': module-1-python-async-await/exercise-generator-python-async-await.md
+  - 'Linter Integration: Python Async Await': module-1-python-async-await/linter-integration-python-async-await.md
+  - 'Unified Cache: Python Async Await': module-1-python-async-await/unified-cache-python-async-await.md
+  - 'Engine: Python Async Await': module-1-python-async-await/engine-python-async-await.md
+  - 'Detect Frameworks: Python Async Await': module-1-python-async-await/detect-frameworks-python-async-await.md
+  - 'Discover Features: Python Async Await': module-1-python-async-await/discover-features-python-async-await.md
+- 'Module 2: Python Comprehensions':
+  - 'Performance Monitor: Python Comprehensions': module-2-python-comprehensions/performance-monitor-python-comprehensions.md
+  - 'Structure Generator: Python Comprehensions': module-2-python-comprehensions/structure-generator-python-comprehensions.md
+  - 'Dependency Analyzer: Python Comprehensions': module-2-python-comprehensions/dependency-analyzer-python-comprehensions.md
+  - 'Content Validator: Python Comprehensions': module-2-python-comprehensions/content-validator-python-comprehensions.md
+  - 'Content Generator: Python Comprehensions': module-2-python-comprehensions/content-generator-python-comprehensions.md
+  - 'Teaching Value Scorer: Python Comprehensions': module-2-python-comprehensions/teaching-value-scorer-python-comprehensions.md
+  - 'Symbol Extractor: Python Comprehensions': module-2-python-comprehensions/symbol-extractor-python-comprehensions.md
+- 'Module 3: Python Context Managers':
+  - 'Persistence: Python Context Managers': module-3-python-context-managers/persistence-python-context-managers.md
+  - 'Export Manager: Python Context Managers': module-3-python-context-managers/export-manager-python-context-managers.md
+  - 'Mkdocs Exporter: Python Context Managers': module-3-python-context-managers/mkdocs-exporter-python-context-managers.md
+  - 'Settings: Python Context Managers': module-3-python-context-managers/settings-python-context-managers.md
+- 'Module 4: Database Migration':
+  - 'Pattern Detector: Database Migration': module-4-database-migration/pattern-detector-database-migration.md
+- 'Module 5: Python Decorators':
+  - 'Server: Python Decorators': module-5-python-decorators/server-python-decorators.md

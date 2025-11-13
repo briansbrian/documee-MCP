@@ -8,8 +8,8 @@ from typing import Optional, List
 class CourseConfig:
     """Configuration settings for course generation."""
     
-    # Target audience level
-    target_audience: str = "mixed"  # beginner, intermediate, advanced, mixed
+    # Target audience level (DEFAULT: beginner for easiest, most accessible content)
+    target_audience: str = "beginner"  # beginner, intermediate, advanced, mixed
     
     # Course focus area
     course_focus: str = "full-stack"  # patterns, architecture, best-practices, full-stack
@@ -49,8 +49,8 @@ class CourseConfig:
     # Export settings
     default_export_format: str = "mkdocs"  # mkdocs, nextjs, json, markdown, pdf
     
-    # Filtering settings
-    min_teaching_value: float = 0.5  # Minimum teaching value score to include
+    # Filtering settings (DEFAULT: 0.3 for more inclusive beginner content)
+    min_teaching_value: float = 0.3  # Minimum teaching value score to include
     
     # Tags to prioritize
     priority_tags: List[str] = field(default_factory=list)

@@ -1,7 +1,7 @@
 {
   "mcpServers": {
     "codebase-to-course-mcp": {
-      "command": "python",
+      "command": "C:/Users/brian/OneDrive/Documents/Apps/Documee_mcp/venv/Scripts/python.exe",
       "args": ["-m", "src.server"],
       "cwd": "C:/Users/brian/OneDrive/Documents/Apps/Documee_mcp",
       "env": {

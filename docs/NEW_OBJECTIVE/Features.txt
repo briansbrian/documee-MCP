@@ -1,0 +1,87 @@
+❌ Feature-level analysis (analyze entire feature, not just files)
+❌ Business logic extraction (understand rules from code)
+❌ Flow tracing (follow execution paths across files)
+❌ Evidence-based validation (check against tests)
+
+┌─────────────────────────────────────────────────────────┐
+│ User: "Onboard junior dev to this project"             │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│ AI: Calls your MCP tools                                │
+│                                                          │
+│ 1. scan_codebase(path) → 2s                            │
+│    ✓ Get structure, languages, project type            │
+│                                                          │
+│ 2. detect_frameworks(codebase_id) → 0.05s             │
+│    ✓ Identify React, Next.js, etc.                     │
+│                                                          │
+│ 3. discover_features(codebase_id) → 0.05s             │
+│    ✓ Find 45 features (routes, components, APIs)       │
+│                                                          │
+│ 4. analyze_codebase_tool(codebase_id) → 30s           │
+│    ✓ Analyze all 234 files                             │
+│    ✓ Score teaching value                              │
+│    ✓ Detect patterns                                   │
+│    ✓ Build dependency graph                            │
+│                                                          │
+│ Total: 35 seconds (vs 10 minutes without MCP)          │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│ AI: Creates course structure                            │
+│                                                          │
+│ - Uses top_teaching_files from analysis                │
+│ - Groups by features from discover_features            │
+│ - Orders by complexity and dependencies                │
+│ - Targets junior dev skill level                       │
+│                                                          │
+│ Result: 5 modules, 23 lessons, 45 exercises            │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│ AI: Generates lesson content                            │
+│                                                          │
+│ For each lesson:                                        │
+│ 1. generate_lesson_outline(file_path) → 2s            │
+│    ✓ Learning objectives                               │
+│    ✓ Code examples                                     │
+│    ✓ Explanations                                      │
+│                                                          │
+│ 2. create_exercise(pattern_type) → 3s                 │
+│    ✓ Starter code                                      │
+│    ✓ Solution                                          │
+│    ✓ Tests                                             │
+│                                                          │
+│ Total: 5s per lesson × 23 lessons = 115s              │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│ AI: Exports complete course                             │
+│                                                          │
+│ export_course(codebase_id, format="mkdocs") → 10s     │
+│                                                          │
+│ ✓ MkDocs site with all lessons                         │
+│ ✓ Navigation structure                                 │
+│ ✓ Search functionality                                 │
+│ ✓ Code highlighting                                    │
+│ ✓ Exercises with validation                            │
+└────────────────────┬────────────────────────────────────┘
+                     │
+                     ▼
+┌─────────────────────────────────────────────────────────┐
+│ Result: Complete onboarding course in 160 seconds      │
+│                                                          │
+│ Junior dev can now:                                     │
+│ - Browse 23 lessons                                     │
+│ - Complete 45 exercises                                 │
+│ - Learn from real codebase                              │
+│ - Get automated feedback                                │
+│                                                          │
+│ All in 2.5 minutes vs 10+ minutes without MCP!         │
+└─────────────────────────────────────────────────────────┘
+

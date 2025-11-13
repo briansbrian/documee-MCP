@@ -40,21 +40,43 @@ Generate a coding exercise for a specific pattern:
 
 ### 3. Export Course
 
-Export a complete course from analyzed codebase:
+Export a comprehensive beginner course (uses defaults):
 
 ```json
 {
-  "codebase_id": "your_codebase_id",
-  "format": "mkdocs"
+  "codebase_id": "your_codebase_id"
 }
 ```
 
+**Defaults (Beginner-Friendly & Comprehensive):**
+- ✅ `target_audience: "beginner"` - Simple language, detailed explanations
+- ✅ `course_focus: "full-stack"` - Covers ALL aspects
+- ✅ `max_duration_hours: None` - No time limit, includes everything
+- ✅ `min_teaching_value: 0.0` - Includes ALL content
+- ✅ `format: "mkdocs"` - Professional website
+
 **Formats:**
-- `mkdocs` - Static site with Material theme
+- `mkdocs` - Static site with Material theme (default)
 - `json` - Structured JSON data
 - `markdown` - Standalone markdown files
 - `nextjs` - Next.js React application
 - `pdf` - Single PDF document
+
+**Target Audience:**
+- `beginner` - Simple language, detailed explanations (DEFAULT)
+- `intermediate` - Balanced complexity
+- `advanced` - Technical language, advanced concepts
+- `mixed` - Varied difficulty levels
+
+**Course Focus:**
+- `full-stack` - Comprehensive coverage of all aspects (DEFAULT)
+- `patterns` - Design patterns emphasis
+- `architecture` - System architecture focus
+- `best-practices` - Coding best practices
+
+**Optional Filters:**
+- `max_duration_hours` - Limit course length (e.g., 10.0 for 10 hours)
+- `min_teaching_value` - Filter by quality (0.0-1.0, default: 0.0 = ALL content)
 
 ## Complete Workflow
 
@@ -93,12 +115,20 @@ Export a complete course from analyzed codebase:
 ```
 **Tool:** `create_exercise`
 
-### Step 5: Export Course
+### Step 5: Export Course (Comprehensive Beginner Course)
+```json
+{
+  "codebase_id": "<from_step_1>"
+}
+```
+**Note:** Defaults create a beginner-friendly course with ALL content included!
+
+**Or customize:**
 ```json
 {
   "codebase_id": "<from_step_1>",
-  "format": "mkdocs",
-  "output_dir": "./my_course"
+  "max_duration_hours": 10.0,
+  "min_teaching_value": 0.5
 }
 ```
 **Tool:** `export_course`

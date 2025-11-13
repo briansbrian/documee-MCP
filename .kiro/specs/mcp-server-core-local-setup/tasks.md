@@ -287,7 +287,13 @@
     always use .\venv\Scripts\python.exe
   - _Requirements: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8, 7.9, 7.10, 7.11, 7.12_
 
-- [ ]* 14. Write Unit Tests
+- [x] 14. Write Unit Tests
+
+
+
+
+
+
   - Create `tests/test_cache.py` for UnifiedCacheManager (test memory cache, SQLite cache, LRU eviction, cache promotion, statistics)
   - Create `tests/test_scan_codebase.py` for scanner (test directory traversal, language detection, ignore patterns, caching)
   - Create `tests/test_detect_frameworks.py` for detector (test package.json parsing, requirements.txt parsing, confidence scoring)
@@ -300,7 +306,13 @@
   - _Requirements: Testing Strategy_
    always use .\venv\Scripts\python.exe
 
-- [ ]* 15. Performance Benchmarking and Validation
+- [x] 15. Performance Benchmarking and Validation
+
+
+
+
+
+
   - Create test codebase with 1000 files for benchmarking
   - Benchmark scan_codebase first run: verify completes in <3000ms
   - Benchmark scan_codebase cached run: verify completes in <100ms
@@ -318,7 +330,13 @@
 
 ### Phase 6: Documentation and Examples
 
-- [ ]* 16. Create Example Usage and Configuration Files
+- [x] 16. Create Example Usage and Configuration Files
+
+
+
+
+
+
   - Create `examples/basic_usage.py` with MCP client example demonstrating all 3 tools
   - Create `examples/kiro_config.json` for Kiro integration with command, args, cwd, disabled fields
   - Create `examples/claude_config.json` for Claude Desktop integration
@@ -327,7 +345,13 @@
    always use .\venv\Scripts\python.exe
   - _Requirements: Documentation_
 
-- [ ]* 17. Write Project README
+- [x] 17. Write Project README
+
+
+
+
+
+
   - Create comprehensive `README.md` in project root
   - Document installation steps: Python 3.12, virtual environment, requirements.txt
   - Document project structure and architecture overview

@@ -1,0 +1,13 @@
+{
+  "mcpServers": {
+    "codebase-to-course-mcp": {
+      "command": "python",
+      "args": ["-m", "src.server"],
+      "cwd": "C:/Users/brian/OneDrive/Documents/Apps/Documee_mcp",
+      "env": {
+        "CACHE_MAX_SIZE_MB": "500",
+        "MAX_FILE_SIZE_MB": "10"
+      }
+    }
+  }
+}

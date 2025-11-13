@@ -1,6 +1,6 @@
-# Analysis Engine Examples
+# Analysis Engine & MCP Server Examples
 
-This directory contains comprehensive examples demonstrating how to use the Analysis Engine.
+This directory contains comprehensive examples demonstrating how to use the Analysis Engine and MCP Server.
 
 ## Quick Start
 
@@ -14,7 +14,365 @@ All examples can be run directly:
 python examples/analyze_single_file_example.py
 ```
 
-## Available Examples
+## MCP Server Examples
+
+### Basic MCP Client Usage
+**File:** `basic_usage.py`
+
+Demonstrates how to use the MCP client to interact with the codebase-to-course-mcp server.
+
+**What you'll learn:**
+- Connect to MCP server via stdio
+- Call all 3 core discovery tools (scan_codebase, detect_frameworks, discover_features)
+- Access MCP resources (codebase://structure, codebase://features)
+- Use MCP prompts (analyze_codebase)
+- Complete workflow from scan to feature discovery
+
+**Run it:**
+```bash
+.\venv\Scripts\python.exe examples/basic_usage.py
+```
+
+**Expected output:**
+```
+✓ Connected to MCP server
+✓ Available tools: 3
+✓ Scan completed in 2500.00ms
+  Codebase ID: a1b2c3d4e5f6g7h8
+  Total Files: 150
+  Primary Language: Python
+✓ Detected 3 frameworks
+  - FastAPI v0.104.1 (Confidence: 95.00%)
+✓ Discovered 12 features
+  Categories: routes, api, utils
+✓ All tools executed successfully!
+```
+
+### Configuration Files
+
+#### Kiro Integration
+**File:** `kiro_config.json`
+
+Configuration for integrating the MCP server with Kiro IDE.
+
+**Usage:**
+1. Copy to `.kiro/settings/mcp.json` in your workspace
+2. Update the `cwd` path to your project directory
+3. Restart Kiro or reconnect MCP servers
+4. Tools will be available in Kiro's MCP panel
+
+**Features:**
+- Auto-approve for all 3 tools (faster workflow)
+- Environment variable configuration
+- Custom cache and file size limits
+
+#### Claude Desktop Integration
+**File:** `claude_config.json`
+
+Configuration for integrating the MCP server with Claude Desktop.
+
+**Usage:**
+1. Open Claude Desktop settings
+2. Navigate to "Developer" → "Edit Config"
+3. Add the server configuration from this file
+4. Update the `cwd` path to your project directory
+5. Restart Claude Desktop
+6. Tools will be available in Claude's tool menu
+
+**Note:** Claude Desktop doesn't support `autoApprove`, so you'll need to approve each tool call.
+
+## Testing Methods
+
+### Method 1: MCP Inspector (Recommended for Development)
+
+The MCP Inspector is the official testing tool from Anthropic.
+
+**Install:**
+```bash
+npm install -g @modelcontextprotocol/inspector
+```
+
+**Run:**
+```bash
+npx @modelcontextprotocol/inspector python -m src.server
+```
+
+**Features:**
+- Interactive web UI at http://localhost:5173
+- Test all tools with custom parameters
+- View tool schemas and descriptions
+- Test resources and prompts
+- See real-time request/response logs
+- Validate JSON schemas
+
+**Example test cases:**
+```json
+// Test scan_codebase
+{
+  "path": ".",
+  "max_depth": 5,
+  "use_cache": true
+}
+
+// Test detect_frameworks
+{
+  "codebase_id": "a1b2c3d4e5f6g7h8",
+  "confidence_threshold": 0.7,
+  "use_cache": true
+}
+
+// Test discover_features
+{
+  "codebase_id": "a1b2c3d4e5f6g7h8",
+  "categories": ["routes", "api"],
+  "use_cache": true
+}
+```
+
+### Method 2: Development Mode (Auto-reload)
+
+Use FastMCP's development mode for rapid iteration.
+
+**Install uv (if not installed):**
+```bash
+pip install uv
+```
+
+**Run:**
+```bash
+uv run mcp dev src/server.py
+```
+
+**Features:**
+- Auto-reload on file changes
+- Faster development cycle
+- Same functionality as production
+- Useful for testing changes quickly
+
+### Method 3: Direct Run (Production Mode)
+
+Run the server directly for production testing.
+
+**Run:**
+```bash
+python -m src.server
+```
+
+**Features:**
+- Production-ready mode
+- Stdio transport (default)
+- Used by AI clients (Claude, Kiro)
+- No auto-reload
+
+**Test with client:**
+```bash
+.\venv\Scripts\python.exe examples/basic_usage.py
+```
+
+### Method 4: Integration Testing
+
+Test the server with actual AI clients.
+
+**Kiro:**
+1. Add config to `.kiro/settings/mcp.json`
+2. Restart Kiro
+3. Open MCP panel
+4. Test tools interactively
+
+**Claude Desktop:**
+1. Add config to Claude settings
+2. Restart Claude Desktop
+3. Start a conversation
+4. Ask Claude to use the tools
+
+**Example prompts:**
+- "Scan the current codebase and tell me what you find"
+- "What frameworks are being used in this project?"
+- "Discover all the API endpoints in this codebase"
+
+## Example Tool Calls with Expected Responses
+
+### 1. scan_codebase
+
+**Request:**
+```json
+{
+  "path": ".",
+  "max_depth": 10,
+  "use_cache": true
+}
+```
+
+**Response:**
+```json
+{
+  "codebase_id": "a1b2c3d4e5f6g7h8",
+  "structure": {
+    "total_files": 150,
+    "total_directories": 25,
+    "total_size_mb": 5.2,
+    "languages": {
+      "Python": 120,
+      "JavaScript": 20,
+      "TypeScript": 10
+    },
+    "file_types": {
+      ".py": 120,
+      ".js": 15,
+      ".ts": 10,
+      ".jsx": 5
+    }
+  },
+  "summary": {
+    "primary_language": "Python",
+    "project_type": "python-application",
+    "has_tests": true,
+    "size_category": "medium"
+  },
+  "scan_time_ms": 2500.0,
+  "from_cache": false
+}
+```
+
+### 2. detect_frameworks
+
+**Request:**
+```json
+{
+  "codebase_id": "a1b2c3d4e5f6g7h8",
+  "confidence_threshold": 0.7,
+  "use_cache": true
+}
+```
+
+**Response:**
+```json
+{
+  "frameworks": [
+    {
+      "name": "FastAPI",
+      "version": "0.104.1",
+      "confidence": 0.95,
+      "evidence": ["requirements.txt dependency"]
+    },
+    {
+      "name": "Pytest",
+      "version": "7.4.3",
+      "confidence": 0.95,
+      "evidence": ["requirements.txt dependency"]
+    },
+    {
+      "name": "React",
+      "version": "18.2.0",
+      "confidence": 0.99,
+      "evidence": ["package.json dependency"]
+    }
+  ],
+  "total_detected": 3,
+  "confidence_threshold": 0.7,
+  "from_cache": false
+}
+```
+
+### 3. discover_features
+
+**Request:**
+```json
+{
+  "codebase_id": "a1b2c3d4e5f6g7h8",
+  "categories": ["all"],
+  "use_cache": true
+}
+```
+
+**Response:**
+```json
+{
+  "features": [
+    {
+      "id": "f1a2b3c4d5e6f7g8",
+      "name": "api",
+      "category": "api",
+      "path": "/absolute/path/to/src/api",
+      "priority": "high"
+    },
+    {
+      "id": "g2h3i4j5k6l7m8n9",
+      "name": "components",
+      "category": "components",
+      "path": "/absolute/path/to/src/components",
+      "priority": "medium"
+    },
+    {
+      "id": "h3i4j5k6l7m8n9o0",
+      "name": "utils",
+      "category": "utils",
+      "path": "/absolute/path/to/src/utils",
+      "priority": "medium"
+    }
+  ],
+  "total_features": 3,
+  "categories": ["api", "components", "utils"],
+  "from_cache": false
+}
+```
+
+### 4. Resource: codebase://structure
+
+**Request:**
+```
+GET codebase://structure
+```
+
+**Response:**
+```json
+{
+  "uri": "codebase://structure",
+  "mimeType": "application/json",
+  "text": "{\"codebase_id\":\"a1b2c3d4e5f6g7h8\",\"structure\":{...}}"
+}
+```
+
+### 5. Resource: codebase://features
+
+**Request:**
+```
+GET codebase://features
+```
+
+**Response:**
+```json
+{
+  "uri": "codebase://features",
+  "mimeType": "application/json",
+  "text": "{\"features\":[...],\"total_features\":3}"
+}
+```
+
+### 6. Prompt: analyze_codebase
+
+**Request:**
+```json
+{
+  "name": "analyze_codebase",
+  "arguments": {
+    "codebase_path": "."
+  }
+}
+```
+
+**Response:**
+```
+Please analyze the codebase at: .
+
+Steps:
+1. Call scan_codebase to get structure
+2. Call detect_frameworks to identify tech stack
+3. Call discover_features to find teachable code
+4. Focus on finding code that teaches well
+```
+
+## Analysis Engine Examples
 
 ### 1. Analyze Single File
 **File:** `analyze_single_file_example.py`

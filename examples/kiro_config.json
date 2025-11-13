@@ -1,0 +1,19 @@
+{
+  "mcpServers": {
+    "codebase-to-course-mcp": {
+      "command": "python",
+      "args": ["-m", "src.server"],
+      "cwd": "C:/Users/brian/OneDrive/Documents/Apps/Documee_mcp",
+      "disabled": false,
+      "env": {
+        "CACHE_MAX_SIZE_MB": "500",
+        "MAX_FILE_SIZE_MB": "10"
+      },
+      "autoApprove": [
+        "scan_codebase",
+        "detect_frameworks",
+        "discover_features"
+      ]
+    }
+  }
+}

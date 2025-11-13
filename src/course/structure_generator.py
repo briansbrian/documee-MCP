@@ -1,26 +1,29 @@
 """Course Structure Generator - Organizes analysis results into modules and lessons."""
 
-from typing import List, Tuple, Dict
+from typing import List, Tuple, Dict, Optional
 from datetime import datetime
 import uuid
 from collections import defaultdict
 from src.models import CodebaseAnalysis, FileAnalysis, DetectedPattern
 from .models import CourseOutline, Module, Lesson
 from .config import CourseConfig
+from .performance_monitor import get_monitor
 
 
 class CourseStructureGenerator:
     """Generates course structure from codebase analysis."""
     
-    def __init__(self, config: CourseConfig):
+    def __init__(self, config: CourseConfig, course_cache=None):
         """Initialize the course structure generator.
         
         Args:
             config: Course generation configuration
+            course_cache: Optional CourseCacheManager for caching
         """
         self.config = config
+        self.course_cache = course_cache
     
-    def generate_course_structure(self, analysis: CodebaseAnalysis) -> CourseOutline:
+    async def generate_course_structure(self, analysis: CodebaseAnalysis) -> CourseOutline:
         """Generate a complete course structure from analysis results.
         
         This method implements Requirements 1.1, 1.2, 1.3, 1.4, 1.5:
@@ -36,8 +39,26 @@ class CourseStructureGenerator:
         Returns:
             CourseOutline with modules and lessons
         """
-        # 1. Extract teachable files sorted by teaching value (Req 1.2)
-        teachable_files = self._filter_teachable_files(analysis)
+        monitor = get_monitor()
+        
+        with monitor.measure("course_structure", file_count=len(analysis.file_analyses)):
+            # Check cache first
+            if self.course_cache:
+                cached = await self.course_cache.get_course_structure(analysis.codebase_id)
+                if cached and "data" in cached:
+                    import logging
+                    logging.getLogger(__name__).info(f"Using cached course structure for {analysis.codebase_id}")
+                    # Reconstruct CourseOutline from cached data
+                    return self._deserialize_course_outline(cached["data"])
+            
+            # 1. Extract teachable files sorted by teaching value (Req 1.2)
+            teachable_files = self._filter_teachable_files(analysis)
+            
+            # 1.5. Apply audience filtering (Req 8.2, Task 13.2)
+            teachable_files = self._filter_by_audience(teachable_files, analysis)
+            
+            # 1.6. Apply focus filtering (Req 8.4, Task 13.3)
+            teachable_files = self._filter_by_focus(teachable_files, analysis)
         
         # 2. Group files by patterns and concepts (Req 1.4)
         grouped_files = self.group_by_patterns(teachable_files, analysis)
@@ -66,7 +87,7 @@ class CourseStructureGenerator:
         description = self._generate_course_description(analysis, modules)
         tags = self._generate_course_tags(analysis)
         
-        return CourseOutline(
+        course_outline = CourseOutline(
             course_id=course_id,
             title=title,
             description=description,
@@ -79,6 +100,18 @@ class CourseStructureGenerator:
             tags=tags,
             prerequisites=[]
         )
+        
+        # Cache the result
+        if self.course_cache:
+            file_paths = [f[0] for f in teachable_files]
+            serialized = self._serialize_course_outline(course_outline)
+            await self.course_cache.set_course_structure(
+                analysis.codebase_id,
+                serialized,
+                file_paths
+            )
+        
+        return course_outline
     
     def group_by_patterns(
         self, 
@@ -327,7 +360,7 @@ class CourseStructureGenerator:
         # Generate basic learning objectives
         learning_objectives = self._generate_basic_objectives(file_analysis)
         
-        return Lesson(
+        lesson = Lesson(
             lesson_id=str(uuid.uuid4()),
             title=title,
             description=description,
@@ -343,6 +376,11 @@ class CourseStructureGenerator:
             exercises=[],  # Will be populated in Task 4
             tags=concepts
         )
+        
+        # Apply audience-based adjustments (Task 13.2)
+        lesson = self.adjust_content_complexity(lesson)
+        
+        return lesson
     
     def _calculate_module_difficulty(self, lessons: List[Lesson]) -> str:
         """Calculate overall module difficulty from lessons."""
@@ -729,3 +767,400 @@ class CourseStructureGenerator:
             sorted_lessons.extend(remaining)
         
         return sorted_lessons
+    
+    # ========== Task 13.2: Audience Filtering ==========
+    
+    def _filter_by_audience(
+        self,
+        teachable_files: List[Tuple[str, float]],
+        analysis: CodebaseAnalysis
+    ) -> List[Tuple[str, float]]:
+        """Filter lessons by difficulty based on target audience.
+        
+        Implements Requirement 8.2: Filters lessons to match audience level.
+        
+        Args:
+            teachable_files: List of (file_path, teaching_value) tuples
+            analysis: Codebase analysis results
+            
+        Returns:
+            Filtered list of teachable files
+        """
+        # If audience is "mixed", include all lessons
+        if self.config.target_audience == "mixed":
+            return teachable_files
+        
+        # Filter based on target audience
+        filtered = []
+        for file_path, teaching_value in teachable_files:
+            file_analysis = analysis.file_analyses.get(file_path)
+            if not file_analysis:
+                continue
+            
+            # Calculate difficulty for this file
+            difficulty = self._calculate_lesson_difficulty(file_analysis)
+            
+            # Include based on audience
+            if self._should_include_for_audience(difficulty):
+                filtered.append((file_path, teaching_value))
+        
+        return filtered
+    
+    def _should_include_for_audience(self, difficulty: str) -> bool:
+        """Check if a lesson should be included for the target audience.
+        
+        Implements Requirement 8.2: Filters lessons to match audience level.
+        
+        Args:
+            difficulty: Lesson difficulty level
+            
+        Returns:
+            True if lesson should be included
+        """
+        audience = self.config.target_audience
+        
+        if audience == "beginner":
+            # Include only beginner and some intermediate
+            return difficulty in ["beginner", "intermediate"]
+        elif audience == "intermediate":
+            # Include intermediate and some beginner/advanced
+            return difficulty in ["beginner", "intermediate", "advanced"]
+        elif audience == "advanced":
+            # Include intermediate and advanced
+            return difficulty in ["intermediate", "advanced"]
+        else:  # mixed
+            return True
+    
+    def adjust_content_complexity(self, lesson: Lesson) -> Lesson:
+        """Adjust content complexity based on target audience.
+        
+        Implements Requirement 8.2: Adjusts content complexity for audience.
+        
+        This method modifies lesson metadata to match the target audience:
+        - For beginners: Increase duration, add more objectives
+        - For advanced: Decrease duration, focus on key concepts
+        
+        Args:
+            lesson: Lesson to adjust
+            
+        Returns:
+            Adjusted lesson
+        """
+        audience = self.config.target_audience
+        
+        if audience == "beginner":
+            # Increase duration for beginners (more explanation needed)
+            lesson.duration_minutes = int(lesson.duration_minutes * 1.2)
+            
+            # Ensure duration doesn't exceed max
+            lesson.duration_minutes = min(
+                lesson.duration_minutes,
+                self.config.max_lesson_duration
+            )
+            
+            # Add foundational objectives if not present
+            if not any("understand" in obj.lower() for obj in lesson.learning_objectives):
+                lesson.learning_objectives.insert(
+                    0,
+                    "Understand the fundamental concepts"
+                )
+        
+        elif audience == "advanced":
+            # Decrease duration for advanced (less explanation needed)
+            lesson.duration_minutes = int(lesson.duration_minutes * 0.8)
+            
+            # Ensure duration doesn't go below min
+            lesson.duration_minutes = max(
+                lesson.duration_minutes,
+                self.config.min_lesson_duration
+            )
+            
+            # Focus on implementation objectives
+            if not any("implement" in obj.lower() for obj in lesson.learning_objectives):
+                lesson.learning_objectives.insert(
+                    0,
+                    "Implement advanced techniques"
+                )
+        
+        return lesson
+    
+    # ========== Task 13.3: Focus Filtering ==========
+    
+    def _filter_by_focus(
+        self,
+        teachable_files: List[Tuple[str, float]],
+        analysis: CodebaseAnalysis
+    ) -> List[Tuple[str, float]]:
+        """Filter and prioritize files based on course focus.
+        
+        Implements Requirement 8.4: Prioritizes relevant content and patterns
+        based on course focus setting.
+        
+        Args:
+            teachable_files: List of (file_path, teaching_value) tuples
+            analysis: Codebase analysis results
+            
+        Returns:
+            Filtered and re-prioritized list of teachable files
+        """
+        # If focus is "full-stack", include everything
+        if self.config.course_focus == "full-stack":
+            return teachable_files
+        
+        # Score each file based on focus relevance
+        scored_files = []
+        for file_path, teaching_value in teachable_files:
+            file_analysis = analysis.file_analyses.get(file_path)
+            if not file_analysis:
+                continue
+            
+            # Calculate focus relevance score
+            focus_score = self._calculate_focus_relevance(file_analysis)
+            
+            # Only include files with sufficient focus relevance
+            if focus_score > 0:
+                # Boost teaching value by focus score
+                adjusted_value = teaching_value * (1 + focus_score)
+                scored_files.append((file_path, adjusted_value))
+        
+        # Re-sort by adjusted teaching value
+        scored_files.sort(key=lambda x: x[1], reverse=True)
+        
+        return scored_files
+    
+    def _calculate_focus_relevance(self, file_analysis: FileAnalysis) -> float:
+        """Calculate how relevant a file is to the course focus.
+        
+        Implements Requirement 8.4: Prioritizes relevant patterns based on focus.
+        
+        Args:
+            file_analysis: Analysis results for the file
+            
+        Returns:
+            Relevance score (0.0 to 1.0)
+        """
+        focus = self.config.course_focus
+        
+        # Define pattern relevance for each focus area
+        focus_patterns = {
+            "patterns": [
+                "factory_pattern", "singleton_pattern", "observer_pattern",
+                "strategy_pattern", "decorator_pattern", "adapter_pattern",
+                "mvc_pattern", "repository_pattern", "dependency_injection"
+            ],
+            "architecture": [
+                "mvc_pattern", "layered_architecture", "microservices",
+                "api_design", "database_model", "service_layer",
+                "repository_pattern", "dependency_injection", "modular_design"
+            ],
+            "best-practices": [
+                "error_handling", "input_validation", "logging",
+                "testing", "documentation", "code_organization",
+                "security", "performance_optimization", "clean_code"
+            ]
+        }
+        
+        relevant_patterns = focus_patterns.get(focus, [])
+        if not relevant_patterns:
+            return 1.0  # Full relevance if focus not recognized
+        
+        # Calculate relevance based on pattern matches
+        relevance_score = 0.0
+        pattern_count = 0
+        
+        for pattern in file_analysis.patterns:
+            pattern_count += 1
+            # Check if pattern matches focus
+            pattern_type = pattern.pattern_type.lower()
+            
+            for relevant_pattern in relevant_patterns:
+                if relevant_pattern.lower() in pattern_type or pattern_type in relevant_pattern.lower():
+                    # Weight by pattern confidence
+                    relevance_score += pattern.confidence
+                    break
+        
+        # Normalize by pattern count
+        if pattern_count > 0:
+            relevance_score = relevance_score / pattern_count
+        
+        # Also consider priority tags from config
+        if self.config.priority_tags:
+            tag_bonus = 0.0
+            for tag in self.config.priority_tags:
+                if any(tag.lower() in concept.lower() for concept in file_analysis.patterns):
+                    tag_bonus += 0.2
+            relevance_score = min(1.0, relevance_score + tag_bonus)
+        
+        # Check exclude tags
+        if self.config.exclude_tags:
+            for tag in self.config.exclude_tags:
+                if any(tag.lower() in p.pattern_type.lower() for p in file_analysis.patterns):
+                    return 0.0  # Exclude this file
+        
+        return relevance_score
+    
+    def prioritize_patterns_by_focus(self, patterns: List[DetectedPattern]) -> List[DetectedPattern]:
+        """Prioritize patterns based on course focus.
+        
+        Implements Requirement 8.4: Prioritizes relevant patterns.
+        
+        Args:
+            patterns: List of detected patterns
+            
+        Returns:
+            Patterns sorted by focus relevance
+        """
+        focus = self.config.course_focus
+        
+        # Define pattern priorities for each focus
+        focus_priorities = {
+            "patterns": {
+                "factory_pattern": 10, "singleton_pattern": 9, "observer_pattern": 9,
+                "strategy_pattern": 8, "decorator_pattern": 8, "adapter_pattern": 7,
+                "mvc_pattern": 7, "repository_pattern": 6, "dependency_injection": 6
+            },
+            "architecture": {
+                "mvc_pattern": 10, "layered_architecture": 9, "microservices": 9,
+                "api_design": 8, "database_model": 8, "service_layer": 7,
+                "repository_pattern": 7, "dependency_injection": 6, "modular_design": 6
+            },
+            "best-practices": {
+                "error_handling": 10, "input_validation": 9, "logging": 9,
+                "testing": 8, "documentation": 8, "code_organization": 7,
+                "security": 10, "performance_optimization": 7, "clean_code": 6
+            }
+        }
+        
+        priorities = focus_priorities.get(focus, {})
+        
+        # Score each pattern
+        scored_patterns = []
+        for pattern in patterns:
+            # Base score is confidence
+            score = pattern.confidence
+            
+            # Boost by focus priority
+            pattern_type = pattern.pattern_type.lower()
+            for priority_pattern, priority_value in priorities.items():
+                if priority_pattern.lower() in pattern_type or pattern_type in priority_pattern.lower():
+                    score *= (1 + priority_value / 10)
+                    break
+            
+            scored_patterns.append((pattern, score))
+        
+        # Sort by score
+        scored_patterns.sort(key=lambda x: x[1], reverse=True)
+        
+        return [pattern for pattern, _ in scored_patterns]
+    
+    # ========== Cache Serialization Methods ==========
+    
+    def _serialize_course_outline(self, course: CourseOutline) -> dict:
+        """Serialize CourseOutline to dictionary for caching.
+        
+        Args:
+            course: CourseOutline to serialize
+            
+        Returns:
+            Dictionary representation
+        """
+        return {
+            "course_id": course.course_id,
+            "title": course.title,
+            "description": course.description,
+            "author": course.author,
+            "version": course.version,
+            "created_at": course.created_at.isoformat(),
+            "modules": [self._serialize_module(m) for m in course.modules],
+            "total_duration_hours": course.total_duration_hours,
+            "difficulty_distribution": course.difficulty_distribution,
+            "tags": course.tags,
+            "prerequisites": course.prerequisites
+        }
+    
+    def _serialize_module(self, module: Module) -> dict:
+        """Serialize Module to dictionary."""
+        return {
+            "module_id": module.module_id,
+            "title": module.title,
+            "description": module.description,
+            "order": module.order,
+            "lessons": [self._serialize_lesson(l) for l in module.lessons],
+            "difficulty": module.difficulty,
+            "duration_hours": module.duration_hours,
+            "learning_objectives": module.learning_objectives
+        }
+    
+    def _serialize_lesson(self, lesson: Lesson) -> dict:
+        """Serialize Lesson to dictionary."""
+        return {
+            "lesson_id": lesson.lesson_id,
+            "title": lesson.title,
+            "description": lesson.description,
+            "order": lesson.order,
+            "difficulty": lesson.difficulty,
+            "duration_minutes": lesson.duration_minutes,
+            "file_path": lesson.file_path,
+            "teaching_value": lesson.teaching_value,
+            "learning_objectives": lesson.learning_objectives,
+            "prerequisites": lesson.prerequisites,
+            "concepts": lesson.concepts,
+            "content": None,  # Content not cached in structure
+            "exercises": [],  # Exercises cached separately
+            "tags": lesson.tags
+        }
+    
+    def _deserialize_course_outline(self, data: dict) -> CourseOutline:
+        """Deserialize CourseOutline from dictionary.
+        
+        Args:
+            data: Dictionary representation
+            
+        Returns:
+            CourseOutline instance
+        """
+        return CourseOutline(
+            course_id=data["course_id"],
+            title=data["title"],
+            description=data["description"],
+            author=data["author"],
+            version=data["version"],
+            created_at=datetime.fromisoformat(data["created_at"]),
+            modules=[self._deserialize_module(m) for m in data["modules"]],
+            total_duration_hours=data["total_duration_hours"],
+            difficulty_distribution=data["difficulty_distribution"],
+            tags=data["tags"],
+            prerequisites=data["prerequisites"]
+        )
+    
+    def _deserialize_module(self, data: dict) -> Module:
+        """Deserialize Module from dictionary."""
+        return Module(
+            module_id=data["module_id"],
+            title=data["title"],
+            description=data["description"],
+            order=data["order"],
+            lessons=[self._deserialize_lesson(l) for l in data["lessons"]],
+            difficulty=data["difficulty"],
+            duration_hours=data["duration_hours"],
+            learning_objectives=data["learning_objectives"]
+        )
+    
+    def _deserialize_lesson(self, data: dict) -> Lesson:
+        """Deserialize Lesson from dictionary."""
+        return Lesson(
+            lesson_id=data["lesson_id"],
+            title=data["title"],
+            description=data["description"],
+            order=data["order"],
+            difficulty=data["difficulty"],
+            duration_minutes=data["duration_minutes"],
+            file_path=data["file_path"],
+            teaching_value=data["teaching_value"],
+            learning_objectives=data["learning_objectives"],
+            prerequisites=data["prerequisites"],
+            concepts=data["concepts"],
+            content=None,
+            exercises=[],
+            tags=data["tags"]
+        )

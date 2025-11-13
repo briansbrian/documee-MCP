@@ -6,20 +6,23 @@ from typing import List, Tuple
 from src.models import DetectedPattern, FileAnalysis
 from .models import Exercise, TestCase
 from .config import CourseConfig
+from .performance_monitor import get_monitor
 
 
 class ExerciseGenerator:
     """Generates coding exercises from detected patterns."""
     
-    def __init__(self, config: CourseConfig):
+    def __init__(self, config: CourseConfig, course_cache=None):
         """Initialize the exercise generator.
         
         Args:
             config: Course generation configuration
+            course_cache: Optional CourseCacheManager for caching
         """
         self.config = config
+        self.course_cache = course_cache
     
-    def generate_exercise(self, pattern: DetectedPattern, file_analysis: FileAnalysis) -> Exercise:
+    async def generate_exercise(self, pattern: DetectedPattern, file_analysis: FileAnalysis) -> Exercise:
         """Generate a coding exercise from a detected pattern.
         
         Args:
@@ -29,8 +32,24 @@ class ExerciseGenerator:
         Returns:
             Exercise with starter code, solution, hints, and test cases
         """
-        # Extract solution code from the pattern
-        solution_code = self._extract_pattern_code(pattern, file_analysis)
+        monitor = get_monitor()
+        
+        with monitor.measure("exercise_generation", pattern_type=pattern.pattern_type):
+            # Check cache first
+            if self.course_cache:
+                cached = await self.course_cache.get_exercise(
+                    file_analysis.file_path,
+                    pattern.pattern_type
+                )
+                if cached and "data" in cached:
+                    import logging
+                    logging.getLogger(__name__).info(
+                        f"Using cached exercise for {file_analysis.file_path}:{pattern.pattern_type}"
+                    )
+                    return self._deserialize_exercise(cached["data"])
+            
+            # Extract solution code from the pattern
+            solution_code = self._extract_pattern_code(pattern, file_analysis)
         
         # Create starter code with TODOs
         starter_code = self._create_starter_code(solution_code, pattern.pattern_type)
@@ -53,7 +72,7 @@ class ExerciseGenerator:
         # Generate learning objectives
         learning_objectives = self._generate_learning_objectives(pattern)
         
-        return Exercise(
+        exercise = Exercise(
             exercise_id=str(uuid.uuid4()),
             title=f"Practice: {self._format_pattern_name(pattern.pattern_type)}",
             description=f"Implement a {pattern.pattern_type} based on the example from {file_analysis.file_path}",
@@ -66,6 +85,17 @@ class ExerciseGenerator:
             test_cases=test_cases,
             learning_objectives=learning_objectives
         )
+        
+        # Cache the result
+        if self.course_cache:
+            serialized = self._serialize_exercise(exercise)
+            await self.course_cache.set_exercise(
+                file_analysis.file_path,
+                pattern.pattern_type,
+                serialized
+            )
+        
+        return exercise
     
     def _extract_pattern_code(self, pattern: DetectedPattern, file_analysis: FileAnalysis) -> str:
         """Extract relevant code demonstrating the pattern.
@@ -397,7 +427,7 @@ class ExerciseGenerator:
         formatted = re.sub(r'([a-z])([A-Z])', r'\1 \2', formatted)
         return formatted.title()
     
-    def generate_exercises_for_lesson(
+    async def generate_exercises_for_lesson(
         self, 
         file_analysis: FileAnalysis, 
         max_exercises: int = 3
@@ -427,7 +457,7 @@ class ExerciseGenerator:
         
         for pattern in patterns:
             try:
-                exercise = self.generate_exercise(pattern, file_analysis)
+                exercise = await self.generate_exercise(pattern, file_analysis)
                 exercises.append(exercise)
             except Exception as e:
                 # Log error but continue with other exercises
@@ -447,9 +477,71 @@ class ExerciseGenerator:
                 metadata={"function_name": func.name}
             )
             try:
-                exercise = self.generate_exercise(generic_pattern, file_analysis)
+                exercise = await self.generate_exercise(generic_pattern, file_analysis)
                 exercises.append(exercise)
             except Exception as e:
                 print(f"Warning: Failed to generate generic exercise: {e}")
         
         return exercises
+    
+    # ========== Cache Serialization Methods ==========
+    
+    def _serialize_exercise(self, exercise: Exercise) -> dict:
+        """Serialize Exercise to dictionary for caching.
+        
+        Args:
+            exercise: Exercise to serialize
+            
+        Returns:
+            Dictionary representation
+        """
+        return {
+            "exercise_id": exercise.exercise_id,
+            "title": exercise.title,
+            "description": exercise.description,
+            "difficulty": exercise.difficulty,
+            "estimated_minutes": exercise.estimated_minutes,
+            "instructions": exercise.instructions,
+            "starter_code": exercise.starter_code,
+            "solution_code": exercise.solution_code,
+            "hints": exercise.hints,
+            "test_cases": [
+                {
+                    "input": tc.input,
+                    "expected_output": tc.expected_output,
+                    "description": tc.description
+                }
+                for tc in exercise.test_cases
+            ],
+            "learning_objectives": exercise.learning_objectives
+        }
+    
+    def _deserialize_exercise(self, data: dict) -> Exercise:
+        """Deserialize Exercise from dictionary.
+        
+        Args:
+            data: Dictionary representation
+            
+        Returns:
+            Exercise instance
+        """
+        return Exercise(
+            exercise_id=data["exercise_id"],
+            title=data["title"],
+            description=data["description"],
+            difficulty=data["difficulty"],
+            estimated_minutes=data["estimated_minutes"],
+            instructions=data["instructions"],
+            starter_code=data["starter_code"],
+            solution_code=data["solution_code"],
+            hints=data["hints"],
+            test_cases=[
+                TestCase(
+                    input=tc["input"],
+                    expected_output=tc["expected_output"],
+                    description=tc["description"]
+                )
+                for tc in data["test_cases"]
+            ],
+            learning_objectives=data["learning_objectives"]
+        )

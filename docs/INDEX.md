@@ -194,6 +194,42 @@ These are the core documents you need to implement and use the MCP server:
 
 ---
 
+### 15. [ANALYSIS_ENGINE_CONFIGURATION.md](ANALYSIS_ENGINE_CONFIGURATION.md)
+**Analysis Engine configuration guide** ⚙️ CONFIGURATION
+
+- Complete configuration reference
+- All config.yaml settings explained
+- Supported languages (50+)
+- Teaching value weights customization
+- Performance tuning options
+- Incremental analysis setup
+- Linter integration
+- Pattern detector plugins
+- Jupyter notebook support
+- Environment variables
+- Configuration examples
+
+**When to use:** Configuring the Analysis Engine for your specific needs.
+
+---
+
+### 16. [ANALYSIS_ENGINE_API.md](ANALYSIS_ENGINE_API.md)
+**Analysis Engine API reference** 📚 API DOCS
+
+- Complete API documentation
+- All public classes and methods
+- Data models and schemas
+- Error handling patterns
+- Performance characteristics
+- Usage examples
+- Method signatures
+- Return types
+- Exception handling
+
+**When to use:** Implementing code that uses the Analysis Engine or understanding the API.
+
+---
+
 ## 📂 Additional Resources (docs/extra/)
 
 These documents provide background research, comparisons, and detailed explorations:
@@ -321,7 +357,7 @@ extra/* (Deep Dives & Research)
 - **Get started quickly?** → [QUICK-START-GUIDE.md](QUICK-START-GUIDE.md)
 - **Debug issues?** → [LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md#debugging)
 - **Test with MCP Inspector?** → [LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md#testing-with-mcp-inspector)
-- **See examples?** → [extra/REAL-WORLD-EXAMPLES.md](extra/REAL-WORLD-EXAMPLES.md)
+- **See examples?** → [extra/REAL-WORLD-EXAMPLES.md](extra/REAL-WORLD-EXAMPLES.md) or [../examples/](../examples/)
 - **Understand caching?** → [ULTIMATE-MCP-SERVER.md](ULTIMATE-MCP-SERVER.md#unified-cache-manager)
 - **Deploy to production?** → [ULTIMATE-MCP-SERVER.md](ULTIMATE-MCP-SERVER.md#deployment)
 - **Troubleshoot issues?** → [SETUP.md](../SETUP.md) or [LOCAL-DEVELOPMENT.md](LOCAL-DEVELOPMENT.md#debugging)
@@ -336,6 +372,9 @@ extra/* (Deep Dives & Research)
 - **Know what to fix before coding?** → [IMPLEMENTATION-READINESS.md](IMPLEMENTATION-READINESS.md#what-needs-fixing)
 - **Track implementation progress?** → [IMPLEMENTATION-CHECKLIST.md](IMPLEMENTATION-CHECKLIST.md) ✅
 - **See detailed task breakdown?** → [IMPLEMENTATION-CHECKLIST.md](IMPLEMENTATION-CHECKLIST.md)
+- **Configure Analysis Engine?** → [ANALYSIS_ENGINE_CONFIGURATION.md](ANALYSIS_ENGINE_CONFIGURATION.md) ⚙️
+- **Use Analysis Engine API?** → [ANALYSIS_ENGINE_API.md](ANALYSIS_ENGINE_API.md) 📚
+- **See Analysis Engine examples?** → [../examples/](../examples/) 💡
 
 ---
 

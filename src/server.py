@@ -1117,7 +1117,7 @@ async def export_course(
         structure_gen = CourseStructureGenerator(course_config)
         
         logger.info(f"Generating course structure for codebase {codebase_id}")
-        course_outline = structure_gen.generate_course_structure(analysis)
+        course_outline = await structure_gen.generate_course_structure(analysis)
         
         # Generate lesson content for each lesson
         content_gen = LessonContentGenerator(course_config)
@@ -1129,14 +1129,14 @@ async def export_course(
                 file_analysis = analysis.file_analyses.get(lesson.file_path)
                 if file_analysis:
                     # Generate lesson content
-                    lesson.content = content_gen.generate_lesson_content(file_analysis)
+                    lesson.content = await content_gen.generate_lesson_content(file_analysis)
                     
                     # Generate exercises (1-3 per lesson based on complexity)
                     patterns = [p for p in file_analysis.patterns if p.confidence > 0.7]
                     num_exercises = min(3, max(1, len(patterns)))
                     
                     for i, pattern in enumerate(patterns[:num_exercises]):
-                        exercise = exercise_gen.generate_exercise(pattern, file_analysis)
+                        exercise = await exercise_gen.generate_exercise(pattern, file_analysis)
                         lesson.exercises.append(exercise)
         
         # Set output directory
@@ -1523,7 +1523,7 @@ async def create_exercise(
             )
         
         # Generate exercise
-        exercise = exercise_gen.generate_exercise(pattern, file_analysis)
+        exercise = await exercise_gen.generate_exercise(pattern, file_analysis)
         
         # Override difficulty if specified
         exercise.difficulty = difficulty

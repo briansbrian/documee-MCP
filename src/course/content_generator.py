@@ -4,6 +4,7 @@ from typing import List, Dict, Optional
 from src.models import FileAnalysis, DetectedPattern, FunctionInfo, ClassInfo
 from .models import LessonContent, CodeExample, CodeHighlight
 from .config import CourseConfig
+from .performance_monitor import get_monitor
 
 
 class LessonContentGenerator:
@@ -17,15 +18,17 @@ class LessonContentGenerator:
     - Generates content in Markdown format
     """
     
-    def __init__(self, config: CourseConfig):
+    def __init__(self, config: CourseConfig, course_cache=None):
         """Initialize the lesson content generator.
         
         Args:
             config: Course generation configuration
+            course_cache: Optional CourseCacheManager for caching
         """
         self.config = config
+        self.course_cache = course_cache
     
-    def generate_lesson_content(self, file_analysis: FileAnalysis) -> LessonContent:
+    async def generate_lesson_content(self, file_analysis: FileAnalysis) -> LessonContent:
         """Generate complete lesson content from file analysis.
         
         This is the main method that orchestrates content generation.
@@ -37,35 +40,53 @@ class LessonContentGenerator:
         Returns:
             Complete LessonContent with all sections
         """
-        # 1. Extract code example (Req 2.1)
-        code_example = self.extract_code_example(file_analysis)
+        monitor = get_monitor()
         
-        # 2. Generate learning objectives from patterns (Req 2.2)
-        objectives = self.generate_objectives(file_analysis)
-        
-        # 3. Create introduction (Req 2.4)
-        introduction = self.generate_introduction(file_analysis, objectives)
-        
-        # 4. Generate explanation (Req 2.4)
-        explanation = self.generate_explanation(file_analysis)
-        
-        # 5. Create code walkthrough with annotations (Req 2.3, 2.4)
-        walkthrough = self.generate_walkthrough(code_example, file_analysis)
-        
-        # 6. Generate summary (Req 2.4)
-        summary = self.generate_summary(objectives, file_analysis)
-        
-        # 7. Generate further reading suggestions
-        further_reading = self._generate_further_reading(file_analysis)
-        
-        return LessonContent(
-            introduction=introduction,
-            explanation=explanation,
-            code_example=code_example,
-            walkthrough=walkthrough,
-            summary=summary,
-            further_reading=further_reading
-        )
+        with monitor.measure("lesson_content", file_path=file_analysis.file_path):
+            # Check cache first
+            if self.course_cache:
+                cached = await self.course_cache.get_lesson_content(file_analysis.file_path)
+                if cached and "data" in cached:
+                    import logging
+                    logging.getLogger(__name__).info(f"Using cached lesson content for {file_analysis.file_path}")
+                    return self._deserialize_lesson_content(cached["data"])
+            
+            # 1. Extract code example (Req 2.1)
+            code_example = self.extract_code_example(file_analysis)
+            
+            # 2. Generate learning objectives from patterns (Req 2.2)
+            objectives = self.generate_objectives(file_analysis)
+            
+            # 3. Create introduction (Req 2.4)
+            introduction = self.generate_introduction(file_analysis, objectives)
+            
+            # 4. Generate explanation (Req 2.4)
+            explanation = self.generate_explanation(file_analysis)
+            
+            # 5. Create code walkthrough with annotations (Req 2.3, 2.4)
+            walkthrough = self.generate_walkthrough(code_example, file_analysis)
+            
+            # 6. Generate summary (Req 2.4)
+            summary = self.generate_summary(objectives, file_analysis)
+            
+            # 7. Generate further reading suggestions
+            further_reading = self._generate_further_reading(file_analysis)
+            
+            lesson_content = LessonContent(
+                introduction=introduction,
+                explanation=explanation,
+                code_example=code_example,
+                walkthrough=walkthrough,
+                summary=summary,
+                further_reading=further_reading
+            )
+            
+            # Cache the result
+            if self.course_cache:
+                serialized = self._serialize_lesson_content(lesson_content)
+                await self.course_cache.set_lesson_content(file_analysis.file_path, serialized)
+            
+            return lesson_content
     
     def extract_code_example(self, file_analysis: FileAnalysis) -> CodeExample:
         """Extract relevant code example from file analysis.
@@ -116,8 +137,11 @@ class LessonContentGenerator:
         """
         objectives = []
         
+        # Prioritize patterns by focus (Task 13.3)
+        patterns = self._prioritize_patterns_by_focus(file_analysis.patterns)
+        
         # Generate objectives from patterns
-        for pattern in file_analysis.patterns[:3]:  # Top 3 patterns
+        for pattern in patterns[:3]:  # Top 3 patterns
             objective = self._pattern_to_objective(pattern)
             if objective:
                 objectives.append(objective)
@@ -217,8 +241,21 @@ class LessonContentGenerator:
         """
         parts = []
         
+        # Add audience-appropriate introduction (Task 13.2)
+        if self.config.target_audience == "beginner":
+            parts.append("## Understanding the Code\n\n")
+            parts.append("Let's break down this code step by step.\n\n")
+        elif self.config.target_audience == "advanced":
+            parts.append("## Technical Overview\n\n")
+        else:
+            parts.append("## What This Code Does\n\n")
+        
         # Explain the overall purpose
-        parts.append("## What This Code Does\n\n")
+        if self.config.target_audience != "beginner":
+            # Skip redundant header for non-beginners
+            pass
+        else:
+            parts.append("### Purpose\n\n")
         
         if file_analysis.symbol_info.classes:
             # Explain class-based code
@@ -683,3 +720,128 @@ class LessonContentGenerator:
             suggestions.append('Documentation Best Practices')
         
         return suggestions if suggestions else ['Clean Code Principles']
+    
+    def _prioritize_patterns_by_focus(self, patterns: List[DetectedPattern]) -> List[DetectedPattern]:
+        """Prioritize patterns based on course focus.
+        
+        Implements Task 13.3: Prioritizes relevant patterns by focus.
+        
+        Args:
+            patterns: List of detected patterns
+            
+        Returns:
+            Patterns sorted by focus relevance
+        """
+        focus = self.config.course_focus
+        
+        # If full-stack, return patterns as-is (sorted by confidence)
+        if focus == "full-stack":
+            return sorted(patterns, key=lambda p: p.confidence, reverse=True)
+        
+        # Define pattern priorities for each focus
+        focus_priorities = {
+            "patterns": {
+                "factory_pattern": 10, "singleton_pattern": 9, "observer_pattern": 9,
+                "strategy_pattern": 8, "decorator_pattern": 8, "adapter_pattern": 7,
+                "mvc_pattern": 7, "repository_pattern": 6, "dependency_injection": 6
+            },
+            "architecture": {
+                "mvc_pattern": 10, "layered_architecture": 9, "microservices": 9,
+                "api_design": 8, "database_model": 8, "service_layer": 7,
+                "repository_pattern": 7, "dependency_injection": 6, "modular_design": 6
+            },
+            "best-practices": {
+                "error_handling": 10, "input_validation": 9, "logging": 9,
+                "testing": 8, "documentation": 8, "code_organization": 7,
+                "security": 10, "performance_optimization": 7, "clean_code": 6
+            }
+        }
+        
+        priorities = focus_priorities.get(focus, {})
+        
+        # Score each pattern
+        scored_patterns = []
+        for pattern in patterns:
+            # Base score is confidence
+            score = pattern.confidence
+            
+            # Boost by focus priority
+            pattern_type = pattern.pattern_type.lower()
+            for priority_pattern, priority_value in priorities.items():
+                if priority_pattern.lower() in pattern_type or pattern_type in priority_pattern.lower():
+                    score *= (1 + priority_value / 10)
+                    break
+            
+            scored_patterns.append((pattern, score))
+        
+        # Sort by score
+        scored_patterns.sort(key=lambda x: x[1], reverse=True)
+        
+        return [pattern for pattern, _ in scored_patterns]
+    
+    # ========== Cache Serialization Methods ==========
+    
+    def _serialize_lesson_content(self, content: LessonContent) -> dict:
+        """Serialize LessonContent to dictionary for caching.
+        
+        Args:
+            content: LessonContent to serialize
+            
+        Returns:
+            Dictionary representation
+        """
+        return {
+            "introduction": content.introduction,
+            "explanation": content.explanation,
+            "code_example": {
+                "code": content.code_example.code,
+                "language": content.code_example.language,
+                "filename": content.code_example.filename,
+                "highlights": [
+                    {
+                        "start_line": h.start_line,
+                        "end_line": h.end_line,
+                        "description": h.description
+                    }
+                    for h in content.code_example.highlights
+                ],
+                "annotations": content.code_example.annotations
+            },
+            "walkthrough": content.walkthrough,
+            "summary": content.summary,
+            "further_reading": content.further_reading
+        }
+    
+    def _deserialize_lesson_content(self, data: dict) -> LessonContent:
+        """Deserialize LessonContent from dictionary.
+        
+        Args:
+            data: Dictionary representation
+            
+        Returns:
+            LessonContent instance
+        """
+        code_ex_data = data["code_example"]
+        code_example = CodeExample(
+            code=code_ex_data["code"],
+            language=code_ex_data["language"],
+            filename=code_ex_data["filename"],
+            highlights=[
+                CodeHighlight(
+                    start_line=h["start_line"],
+                    end_line=h["end_line"],
+                    description=h["description"]
+                )
+                for h in code_ex_data["highlights"]
+            ],
+            annotations=code_ex_data["annotations"]
+        )
+        
+        return LessonContent(
+            introduction=data["introduction"],
+            explanation=data["explanation"],
+            code_example=code_example,
+            walkthrough=data["walkthrough"],
+            summary=data["summary"],
+            further_reading=data["further_reading"]
+        )

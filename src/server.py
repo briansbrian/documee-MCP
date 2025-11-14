@@ -1171,6 +1171,82 @@ async def export_course(
         if not output_dir:
             output_dir = f"./output/{codebase_id}_course"
         
+        # Save course data as JSON for enrichment guide access
+        import json
+        from pathlib import Path
+        
+        output_path = Path(output_dir)
+        output_path.mkdir(parents=True, exist_ok=True)
+        
+        # Convert course outline to dict for JSON serialization
+        course_data = {
+            'course_id': course_outline.course_id,
+            'title': course_outline.title,
+            'description': course_outline.description,
+            'author': course_outline.author,
+            'version': course_outline.version,
+            'created_at': course_outline.created_at.isoformat(),
+            'total_duration_hours': course_outline.total_duration_hours,
+            'difficulty_distribution': course_outline.difficulty_distribution,
+            'tags': course_outline.tags,
+            'prerequisites': course_outline.prerequisites,
+            'modules': []
+        }
+        
+        # Convert modules and lessons
+        for module in course_outline.modules:
+            module_data = {
+                'module_id': module.module_id,
+                'title': module.title,
+                'description': module.description,
+                'order': module.order,
+                'difficulty': module.difficulty,
+                'duration_hours': module.duration_hours,
+                'learning_objectives': module.learning_objectives,
+                'lessons': []
+            }
+            
+            for lesson in module.lessons:
+                lesson_data = {
+                    'lesson_id': lesson.lesson_id,
+                    'title': lesson.title,
+                    'description': lesson.description,
+                    'order': lesson.order,
+                    'difficulty': lesson.difficulty,
+                    'duration_minutes': lesson.duration_minutes,
+                    'file_path': lesson.file_path,
+                    'teaching_value': lesson.teaching_value,
+                    'learning_objectives': lesson.learning_objectives,
+                    'prerequisites': lesson.prerequisites,
+                    'concepts': lesson.concepts,
+                    'exercises': [
+                        {
+                            'exercise_id': ex.exercise_id,
+                            'title': ex.title,
+                            'description': ex.description,
+                            'difficulty': ex.difficulty,
+                            'estimated_minutes': ex.estimated_minutes,
+                            'instructions': ex.instructions,
+                            'starter_code': ex.starter_code,
+                            'solution_code': ex.solution_code,
+                            'hints': ex.hints,
+                            'learning_objectives': ex.learning_objectives
+                        }
+                        for ex in lesson.exercises
+                    ],
+                    'tags': lesson.tags
+                }
+                module_data['lessons'].append(lesson_data)
+            
+            course_data['modules'].append(module_data)
+        
+        # Save course data
+        course_data_path = output_path / 'course_data.json'
+        with open(course_data_path, 'w', encoding='utf-8') as f:
+            json.dump(course_data, f, indent=2, ensure_ascii=False)
+        
+        logger.info(f"Saved course data to {course_data_path}")
+        
         # Export course
         export_manager = ExportManager(course_config)
         logger.info(f"Exporting course to {format} format at {output_dir}")
@@ -1562,16 +1638,28 @@ async def create_exercise(
         # Override difficulty if specified
         exercise.difficulty = difficulty
         
-        # Adjust estimated time based on difficulty
-        if difficulty == 'beginner':
-            exercise.estimated_minutes = min(15, exercise.estimated_minutes)
-        elif difficulty == 'advanced':
-            exercise.estimated_minutes = max(30, exercise.estimated_minutes)
-        
         # Convert to dict
-        from dataclasses import asdict
-        result = asdict(exercise)
-        result['pattern_type'] = pattern_type
+        result = {
+            'exercise_id': exercise.exercise_id,
+            'title': exercise.title,
+            'description': exercise.description,
+            'difficulty': exercise.difficulty,
+            'estimated_minutes': exercise.estimated_minutes,
+            'instructions': exercise.instructions,
+            'starter_code': exercise.starter_code,
+            'solution_code': exercise.solution_code,
+            'hints': exercise.hints,
+            'test_cases': [
+                {
+                    'input': tc.input,
+                    'expected_output': tc.expected_output,
+                    'description': tc.description
+                }
+                for tc in exercise.test_cases
+            ],
+            'learning_objectives': exercise.learning_objectives,
+            'pattern_type': pattern_type
+        }
         
         # Log completion
         duration_ms = (time.time() - start_time) * 1000
@@ -1586,6 +1674,791 @@ async def create_exercise(
     except Exception as e:
         logger.error(f"Error creating exercise for pattern {pattern_type}: {e}")
         raise RuntimeError(f"Failed to create exercise: {str(e)}")
+
+
+@mcp.tool
+async def get_enrichment_guide(
+    codebase_id: str,
+    lesson_id: str,
+    ctx: Context = None
+) -> dict:
+    """
+    Generate a comprehensive enrichment guide for AI content enrichment.
+    
+    Creates an evidence-based enrichment guide following the Feature-to-Lesson
+    Mapping and Knowledge-to-Course frameworks. The guide provides structured,
+    validated guidance for AI assistants (like Kiro) to generate rich educational
+    content with proper citations and anti-hallucination measures.
+    
+    The enrichment guide includes:
+    - Feature mapping (connecting code to user-facing features)
+    - Evidence bundle (source code, tests, git commits, documentation)
+    - Validation checklist (cross-referenced understanding)
+    - Teaching value assessment (0-14 scoring system)
+    - Systematic investigation (what, why, how, when, edge cases, pitfalls)
+    - Narrative structure (introduction, progression, conclusion)
+    - Code section guides (detailed explanations with citations)
+    - Architecture context (component roles, data flow, patterns)
+    - Real-world context (use cases, analogies, best practices)
+    - Exercise generation (hands-on tasks with progressive hints)
+    - Anti-hallucination rules (evidence requirements)
+    - Enrichment instructions (tone, depth, focus areas)
+    
+    Args:
+        codebase_id: Unique identifier from scan_codebase (required)
+                    You must run analyze_codebase_tool first to get analysis data
+        lesson_id: Lesson identifier from exported course (required)
+                  Format: "module-{n}-lesson-{m}" (e.g., "module-1-lesson-1")
+                  Get lesson IDs from export_course output
+        ctx: FastMCP context (injected automatically)
+    
+    Returns:
+        Dictionary with EnrichmentGuide containing all 12 components:
+        - lesson_id: Lesson identifier
+        - feature_mapping: Feature name, purpose, business value, entry points, flow
+        - evidence_bundle: Source files, tests, git commits, docs, dependencies
+        - validation_checklist: Code behavior, test expectations, doc alignment, git context
+        - teaching_value_assessment: Scores (0-14), reasoning, should_teach flag
+        - systematic_investigation: What, why, how, when, edge cases, pitfalls
+        - narrative_structure: Introduction, progression, walkthrough order, conclusion
+        - code_sections: Detailed guides for each code section with evidence
+        - architecture_context: Component role, data flow, interaction diagram, patterns
+        - real_world_context: Use cases, analogies, industry patterns, best practices
+        - exercise_generation: Tasks, starter code, solution, hints, self-assessment
+        - anti_hallucination_rules: Citation requirements, validation rules
+        - enrichment_instructions: Tone, depth, focus areas, evidence requirements
+    
+    Raises:
+        ValueError: If codebase not analyzed, lesson not found, or invalid parameters
+        RuntimeError: If server not initialized or guide generation fails
+    
+    Examples:
+        Get enrichment guide for first lesson:
+        {"codebase_id": "a1b2c3d4e5f6g7h8", "lesson_id": "module-1-lesson-1"}
+        
+        Get guide for specific lesson:
+        {"codebase_id": "a1b2c3d4e5f6g7h8", "lesson_id": "module-2-lesson-3"}
+    """
+    start_time = time.time()
+    
+    # Access app context
+    if not app_context:
+        raise RuntimeError("Server not initialized")
+    
+    cache_manager = app_context.cache_manager
+    analysis_engine = app_context.analysis_engine
+    config = app_context.config
+    
+    # Validate input
+    if not codebase_id or not codebase_id.strip():
+        raise ValueError("codebase_id parameter is required and cannot be empty")
+    
+    if not lesson_id or not lesson_id.strip():
+        raise ValueError("lesson_id parameter is required and cannot be empty")
+    
+    # Log tool invocation
+    logger.info(
+        f"Tool invoked: get_enrichment_guide with arguments: "
+        f"codebase_id={codebase_id}, lesson_id={lesson_id}"
+    )
+    
+    try:
+        # Get codebase analysis from cache
+        cache_key = f"codebase:{codebase_id}"
+        cached_analysis = await cache_manager.get_analysis(cache_key)
+        
+        if not cached_analysis:
+            raise ValueError(
+                f"Codebase not analyzed. Call analyze_codebase_tool with codebase_id='{codebase_id}' first."
+            )
+        
+        # Convert to CodebaseAnalysis if needed
+        from src.models import CodebaseAnalysis
+        if isinstance(cached_analysis, dict):
+            analysis = CodebaseAnalysis.from_dict(cached_analysis)
+        else:
+            analysis = cached_analysis
+        
+        # Get course data to find the lesson
+        # For now, we'll need to load the course data from the export
+        # This assumes export_course has been called and saved course data
+        import json
+        from pathlib import Path
+        import glob
+        
+        # Try to find course_data.json in output directory
+        # First try default location
+        course_data_path = Path(f"./output/{codebase_id}_course/course_data.json")
+        
+        # If not found, search for any course_data.json with this codebase_id
+        if not course_data_path.exists():
+            search_pattern = f"./output/*{codebase_id}*/course_data.json"
+            matches = glob.glob(search_pattern)
+            if matches:
+                # Sort by modification time to get the most recent
+                matches.sort(key=lambda x: Path(x).stat().st_mtime, reverse=True)
+                course_data_path = Path(matches[0])
+            else:
+                raise ValueError(
+                    f"Course data not found. Call export_course with codebase_id='{codebase_id}' first."
+                )
+        
+        # Load course data
+        with open(course_data_path, 'r', encoding='utf-8') as f:
+            course_data = json.load(f)
+        
+        # Find the lesson
+        lesson = None
+        for module in course_data.get('modules', []):
+            for les in module.get('lessons', []):
+                if les.get('lesson_id') == lesson_id:
+                    lesson = les
+                    break
+            if lesson:
+                break
+        
+        if not lesson:
+            raise ValueError(
+                f"Lesson '{lesson_id}' not found in course. "
+                f"Check lesson IDs from export_course output."
+            )
+        
+        # Convert lesson dict to Lesson object
+        from src.course.models import Lesson
+        lesson_obj = Lesson(
+            lesson_id=lesson['lesson_id'],
+            title=lesson['title'],
+            description=lesson['description'],
+            order=lesson['order'],
+            difficulty=lesson['difficulty'],
+            duration_minutes=lesson['duration_minutes'],
+            file_path=lesson['file_path'],
+            teaching_value=lesson['teaching_value'],
+            learning_objectives=lesson.get('learning_objectives', []),
+            prerequisites=lesson.get('prerequisites', []),
+            concepts=lesson.get('concepts', []),
+            content=None,  # Will be enriched
+            exercises=lesson.get('exercises', []),
+            tags=lesson.get('tags', [])
+        )
+        
+        # Get file analysis for the lesson's source file
+        file_analysis = analysis.file_analyses.get(lesson_obj.file_path)
+        
+        if not file_analysis:
+            raise ValueError(
+                f"File analysis not found for '{lesson_obj.file_path}'. "
+                f"The file may not have been analyzed."
+            )
+        
+        # Get repository path from scan data
+        scan_data = await cache_manager.get_resource("structure")
+        
+        if not scan_data:
+            raise ValueError(
+                f"Scan data not found for codebase '{codebase_id}'. "
+                f"Call scan_codebase first."
+            )
+        
+        repo_path = scan_data.get('path', '.')
+        
+        # Initialize EnrichmentGuideGenerator
+        from src.course.enrichment_guide_generator import EnrichmentGuideGenerator
+        from src.analysis.git_analyzer import GitAnalyzer
+        
+        # Try to create GitAnalyzer (may fail if not a git repo)
+        git_analyzer = None
+        try:
+            git_analyzer = GitAnalyzer(repo_path)
+        except Exception as e:
+            logger.warning(f"Could not initialize GitAnalyzer: {e}. Git evidence will be unavailable.")
+        
+        # Create enrichment guide generator
+        enrichment_generator = EnrichmentGuideGenerator(
+            repo_path=repo_path,
+            analysis_engine=analysis_engine,
+            git_analyzer=git_analyzer
+        )
+        
+        # Generate enrichment guide
+        logger.info(f"Generating enrichment guide for lesson '{lesson_id}'")
+        enrichment_guide = await enrichment_generator.generate_guide(
+            codebase_id=codebase_id,
+            lesson=lesson_obj,
+            file_analysis=file_analysis
+        )
+        
+        # Convert to dict for JSON serialization
+        result = enrichment_guide.to_dict()
+        
+        # Log completion
+        duration_ms = (time.time() - start_time) * 1000
+        logger.info(
+            f"Tool completed: get_enrichment_guide in {duration_ms:.2f}ms "
+            f"(teaching_value={enrichment_guide.teaching_value_assessment.total_score}/14, "
+            f"should_teach={enrichment_guide.teaching_value_assessment.should_teach})"
+        )
+        
+        # Log slow operations
+        if config.log_slow_operations and duration_ms > config.slow_operation_threshold_ms:
+            logger.warning(f"Slow operation detected: get_enrichment_guide took {duration_ms:.2f}ms")
+        
+        return result
+        
+    except ValueError as e:
+        raise ValueError(str(e))
+    except FileNotFoundError as e:
+        raise ValueError(f"File not found: {str(e)}")
+    except Exception as e:
+        logger.error(f"Error generating enrichment guide for lesson '{lesson_id}': {e}", exc_info=True)
+        raise RuntimeError(f"Failed to generate enrichment guide: {str(e)}")
+
+
+@mcp.tool
+async def update_lesson_content(
+    codebase_id: str,
+    lesson_id: str,
+    enriched_content: dict,
+    ctx: Context = None
+) -> dict:
+    """
+    Update lesson with enriched content from AI assistant.
+    
+    Validates and merges enriched content into a lesson, preserving the existing
+    structure while updating fields like description, content, code examples,
+    exercises, and learning objectives. Tracks enrichment status and saves the
+    updated course data to disk.
+    
+    This tool is designed to be called by AI assistants (like Kiro) after they
+    have generated rich educational content using the enrichment guide from
+    get_enrichment_guide.
+    
+    Args:
+        codebase_id: Unique identifier from scan_codebase (required)
+                    Must match the codebase used in export_course
+        lesson_id: Lesson identifier to update (required)
+                  Format: "module-{n}-lesson-{m}" (e.g., "module-1-lesson-1")
+        enriched_content: Dictionary with enriched fields (required)
+                         Required fields:
+                         - description: Rich description with context (string)
+                         - content: Full learning narrative (string)
+                         
+                         Optional fields:
+                         - code_examples: Enhanced code examples with explanations (list)
+                         - exercises: Enhanced exercises with hints (list)
+                         - learning_objectives: Generated learning goals (list)
+                         
+                         Example:
+                         {
+                           "description": "Learn how to implement secure user authentication...",
+                           "content": "# Introduction\n\nAuthentication is critical...",
+                           "learning_objectives": ["Understand password hashing", "Implement JWT tokens"],
+                           "code_examples": [
+                             {
+                               "code": "def login(username, password):",
+                               "explanation": "This function validates user credentials..."
+                             }
+                           ],
+                           "exercises": [
+                             {
+                               "title": "Add Password Strength Validation",
+                               "instructions": "Implement a function that validates...",
+                               "hints": ["Start by checking length", "Add special character check"]
+                             }
+                           ]
+                         }
+        ctx: FastMCP context (injected automatically)
+    
+    Returns:
+        Dictionary with:
+        - success: True if update succeeded
+        - lesson_id: Updated lesson identifier
+        - updated_fields: List of fields that were updated
+        - enrichment_status: Current enrichment status
+        - message: Success message
+    
+    Raises:
+        ValueError: If codebase not found, lesson not found, or content validation fails
+        RuntimeError: If server not initialized or update fails
+    
+    Examples:
+        Update lesson with enriched content:
+        {
+          "codebase_id": "a1b2c3d4e5f6g7h8",
+          "lesson_id": "module-1-lesson-1",
+          "enriched_content": {
+            "description": "Learn secure authentication with bcrypt and JWT",
+            "content": "# Introduction\n\nAuthentication is critical for...",
+            "learning_objectives": ["Understand password hashing", "Implement JWT tokens"]
+          }
+        }
+        
+        Update with full enrichment:
+        {
+          "codebase_id": "a1b2c3d4e5f6g7h8",
+          "lesson_id": "module-2-lesson-3",
+          "enriched_content": {
+            "description": "Master React component patterns",
+            "content": "# Component Patterns\n\nReact components...",
+            "learning_objectives": ["Create reusable components", "Implement hooks"],
+            "code_examples": [...],
+            "exercises": [...]
+          }
+        }
+    """
+    start_time = time.time()
+    
+    # Access app context
+    if not app_context:
+        raise RuntimeError("Server not initialized")
+    
+    cache_manager = app_context.cache_manager
+    config = app_context.config
+    
+    # Validate input
+    if not codebase_id or not codebase_id.strip():
+        raise ValueError("codebase_id parameter is required and cannot be empty")
+    
+    if not lesson_id or not lesson_id.strip():
+        raise ValueError("lesson_id parameter is required and cannot be empty")
+    
+    if not enriched_content or not isinstance(enriched_content, dict):
+        raise ValueError("enriched_content parameter is required and must be a dictionary")
+    
+    # Log tool invocation
+    logger.info(
+        f"Tool invoked: update_lesson_content with arguments: "
+        f"codebase_id={codebase_id}, lesson_id={lesson_id}, "
+        f"enriched_fields={list(enriched_content.keys())}"
+    )
+    
+    try:
+        # Validate enriched content structure
+        _validate_enriched_content(enriched_content)
+        
+        # Load course data
+        import json
+        from pathlib import Path
+        from datetime import datetime
+        import glob
+        
+        # Try to find course_data.json in output directory
+        # First try default location
+        course_data_path = Path(f"./output/{codebase_id}_course/course_data.json")
+        
+        # If not found, search for any course_data.json with this codebase_id
+        if not course_data_path.exists():
+            search_pattern = f"./output/*{codebase_id}*/course_data.json"
+            matches = glob.glob(search_pattern)
+            if matches:
+                # Sort by modification time to get the most recent
+                matches.sort(key=lambda x: Path(x).stat().st_mtime, reverse=True)
+                course_data_path = Path(matches[0])
+            else:
+                raise ValueError(
+                    f"Course data not found for codebase '{codebase_id}'. "
+                    f"Call export_course first to generate the course."
+                )
+        
+        # Load existing course data
+        with open(course_data_path, 'r', encoding='utf-8') as f:
+            course_data = json.load(f)
+        
+        # Find the lesson
+        lesson = None
+        module_idx = None
+        lesson_idx = None
+        
+        for m_idx, module in enumerate(course_data.get('modules', [])):
+            for l_idx, les in enumerate(module.get('lessons', [])):
+                if les.get('lesson_id') == lesson_id:
+                    lesson = les
+                    module_idx = m_idx
+                    lesson_idx = l_idx
+                    break
+            if lesson:
+                break
+        
+        if not lesson:
+            raise ValueError(
+                f"Lesson '{lesson_id}' not found in course. "
+                f"Check lesson IDs from export_course output."
+            )
+        
+        # Track which fields were updated
+        updated_fields = []
+        
+        # Merge enriched content into lesson (preserve structure)
+        if 'description' in enriched_content:
+            lesson['description'] = enriched_content['description']
+            updated_fields.append('description')
+        
+        if 'content' in enriched_content:
+            lesson['content'] = enriched_content['content']
+            updated_fields.append('content')
+        
+        if 'learning_objectives' in enriched_content:
+            lesson['learning_objectives'] = enriched_content['learning_objectives']
+            updated_fields.append('learning_objectives')
+        
+        if 'code_examples' in enriched_content:
+            # Merge code examples - update explanations if provided
+            for enriched_example in enriched_content['code_examples']:
+                # Find matching code example by code content or index
+                if 'code' in enriched_example:
+                    # Try to find matching example
+                    found = False
+                    for existing_example in lesson.get('code_examples', []):
+                        if existing_example.get('code') == enriched_example['code']:
+                            # Update explanation
+                            if 'explanation' in enriched_example:
+                                existing_example['explanation'] = enriched_example['explanation']
+                            found = True
+                            break
+                    
+                    # If not found, add as new example
+                    if not found:
+                        if 'code_examples' not in lesson:
+                            lesson['code_examples'] = []
+                        lesson['code_examples'].append(enriched_example)
+            
+            updated_fields.append('code_examples')
+        
+        if 'exercises' in enriched_content:
+            # Merge exercises - update or add new ones
+            for enriched_exercise in enriched_content['exercises']:
+                # Find matching exercise by title or exercise_id
+                found = False
+                
+                for existing_exercise in lesson.get('exercises', []):
+                    if (existing_exercise.get('title') == enriched_exercise.get('title') or
+                        existing_exercise.get('exercise_id') == enriched_exercise.get('exercise_id')):
+                        # Update exercise fields
+                        if 'description' in enriched_exercise:
+                            existing_exercise['description'] = enriched_exercise['description']
+                        if 'instructions' in enriched_exercise:
+                            existing_exercise['instructions'] = enriched_exercise['instructions']
+                        if 'hints' in enriched_exercise:
+                            existing_exercise['hints'] = enriched_exercise['hints']
+                        if 'starter_code' in enriched_exercise:
+                            existing_exercise['starter_code'] = enriched_exercise['starter_code']
+                        if 'solution_code' in enriched_exercise:
+                            existing_exercise['solution_code'] = enriched_exercise['solution_code']
+                        found = True
+                        break
+                
+                # If not found, add as new exercise
+                if not found:
+                    if 'exercises' not in lesson:
+                        lesson['exercises'] = []
+                    lesson['exercises'].append(enriched_exercise)
+            
+            updated_fields.append('exercises')
+        
+        # Update enrichment status tracking
+        if 'enrichment_status' not in course_data:
+            course_data['enrichment_status'] = {}
+        
+        # Get existing status or create new
+        existing_status = course_data['enrichment_status'].get(lesson_id, {})
+        version = existing_status.get('version', 0) + 1
+        
+        course_data['enrichment_status'][lesson_id] = {
+            'status': 'completed',
+            'enriched_at': datetime.now().isoformat(),
+            'enriched_by': 'kiro',
+            'version': version,
+            'updated_fields': updated_fields
+        }
+        
+        # Save updated course data to disk
+        with open(course_data_path, 'w', encoding='utf-8') as f:
+            json.dump(course_data, f, indent=2, ensure_ascii=False)
+        
+        logger.info(
+            f"Successfully updated lesson '{lesson_id}' with enriched content. "
+            f"Updated fields: {', '.join(updated_fields)}"
+        )
+        
+        # Prepare result
+        result = {
+            'success': True,
+            'lesson_id': lesson_id,
+            'updated_fields': updated_fields,
+            'enrichment_status': {
+                'status': 'completed',
+                'version': version,
+                'enriched_at': course_data['enrichment_status'][lesson_id]['enriched_at']
+            },
+            'message': f"Lesson '{lesson_id}' successfully updated with {len(updated_fields)} enriched fields"
+        }
+        
+        # Log completion
+        duration_ms = (time.time() - start_time) * 1000
+        logger.info(
+            f"Tool completed: update_lesson_content in {duration_ms:.2f}ms "
+            f"({len(updated_fields)} fields updated)"
+        )
+        
+        # Log slow operations
+        if config.log_slow_operations and duration_ms > config.slow_operation_threshold_ms:
+            logger.warning(f"Slow operation detected: update_lesson_content took {duration_ms:.2f}ms")
+        
+        return result
+        
+    except ValueError as e:
+        logger.error(f"Validation error updating lesson '{lesson_id}': {e}")
+        return {
+            'success': False,
+            'lesson_id': lesson_id,
+            'error': str(e),
+            'message': f"Failed to update lesson: {str(e)}"
+        }
+    except Exception as e:
+        logger.error(f"Error updating lesson '{lesson_id}': {e}", exc_info=True)
+        return {
+            'success': False,
+            'lesson_id': lesson_id,
+            'error': str(e),
+            'message': f"Failed to update lesson: {str(e)}"
+        }
+
+
+@mcp.tool
+async def list_lessons_for_enrichment(
+    codebase_id: str,
+    ctx: Context = None
+) -> dict:
+    """
+    List all lessons available for enrichment with their status.
+    
+    Returns a list of all lessons in the course with their enrichment status,
+    teaching value scores, and source files. Lessons are sorted by teaching
+    value score (high to low) to prioritize the most valuable content for
+    enrichment.
+    
+    This tool helps AI assistants (like Kiro) identify which lessons to enrich
+    and track enrichment progress across the course.
+    
+    Args:
+        codebase_id: Unique identifier from scan_codebase (required)
+                    Must match the codebase used in export_course
+        ctx: FastMCP context (injected automatically)
+    
+    Returns:
+        Dictionary with:
+        - lessons: List of lesson dictionaries, each containing:
+          - lesson_id: Lesson identifier (e.g., "module-1-lesson-1")
+          - title: Lesson title
+          - module_title: Parent module title
+          - status: Enrichment status ("not_started", "in_progress", "completed")
+          - teaching_value: Teaching value score (0.0-1.0)
+          - source_files: List of source file paths
+          - difficulty: Lesson difficulty level
+          - duration_minutes: Estimated lesson duration
+          - enriched_at: ISO timestamp of last enrichment (if completed)
+          - version: Enrichment version number (if enriched)
+        - total_lessons: Total number of lessons
+        - enrichment_summary: Summary statistics:
+          - not_started: Count of lessons not yet enriched
+          - in_progress: Count of lessons being enriched
+          - completed: Count of completed lessons
+          - completion_percentage: Percentage of completed lessons
+        - codebase_id: Codebase identifier
+    
+    Raises:
+        ValueError: If codebase not found or course not exported
+        RuntimeError: If server not initialized
+    
+    Examples:
+        List all lessons for enrichment:
+        {"codebase_id": "a1b2c3d4e5f6g7h8"}
+        
+        Get enrichment progress:
+        {"codebase_id": "a1b2c3d4e5f6g7h8"}
+    """
+    start_time = time.time()
+    
+    # Access app context
+    if not app_context:
+        raise RuntimeError("Server not initialized")
+    
+    cache_manager = app_context.cache_manager
+    config = app_context.config
+    
+    # Validate input
+    if not codebase_id or not codebase_id.strip():
+        raise ValueError("codebase_id parameter is required and cannot be empty")
+    
+    # Log tool invocation
+    logger.info(
+        f"Tool invoked: list_lessons_for_enrichment with arguments: "
+        f"codebase_id={codebase_id}"
+    )
+    
+    try:
+        # Load course data
+        import json
+        from pathlib import Path
+        import glob
+        
+        # Try to find course_data.json in output directory
+        # First try default location
+        course_data_path = Path(f"./output/{codebase_id}_course/course_data.json")
+        
+        # If not found, search for any course_data.json with this codebase_id
+        if not course_data_path.exists():
+            search_pattern = f"./output/*{codebase_id}*/course_data.json"
+            matches = glob.glob(search_pattern)
+            if matches:
+                # Sort by modification time to get the most recent
+                matches.sort(key=lambda x: Path(x).stat().st_mtime, reverse=True)
+                course_data_path = Path(matches[0])
+            else:
+                raise ValueError(
+                    f"Course data not found for codebase '{codebase_id}'. "
+                    f"Call export_course first to generate the course."
+                )
+        
+        # Load existing course data
+        with open(course_data_path, 'r', encoding='utf-8') as f:
+            course_data = json.load(f)
+        
+        # Get enrichment status tracking
+        enrichment_status = course_data.get('enrichment_status', {})
+        
+        # Build lessons list
+        lessons = []
+        
+        for module in course_data.get('modules', []):
+            module_title = module.get('title', 'Unknown Module')
+            
+            for lesson in module.get('lessons', []):
+                lesson_id = lesson.get('lesson_id')
+                
+                # Get enrichment status for this lesson
+                lesson_status = enrichment_status.get(lesson_id, {})
+                status = lesson_status.get('status', 'not_started')
+                enriched_at = lesson_status.get('enriched_at')
+                version = lesson_status.get('version', 0)
+                
+                # Build lesson info
+                lesson_info = {
+                    'lesson_id': lesson_id,
+                    'title': lesson.get('title', 'Untitled Lesson'),
+                    'module_title': module_title,
+                    'status': status,
+                    'teaching_value': lesson.get('teaching_value', 0.0),
+                    'source_files': [lesson.get('file_path')] if lesson.get('file_path') else [],
+                    'difficulty': lesson.get('difficulty', 'intermediate'),
+                    'duration_minutes': lesson.get('duration_minutes', 0)
+                }
+                
+                # Add enrichment metadata if available
+                if enriched_at:
+                    lesson_info['enriched_at'] = enriched_at
+                if version > 0:
+                    lesson_info['version'] = version
+                
+                lessons.append(lesson_info)
+        
+        # Sort by teaching value (high to low)
+        lessons.sort(key=lambda x: x['teaching_value'], reverse=True)
+        
+        # Calculate enrichment summary
+        total_lessons = len(lessons)
+        not_started = sum(1 for l in lessons if l['status'] == 'not_started')
+        in_progress = sum(1 for l in lessons if l['status'] == 'in_progress')
+        completed = sum(1 for l in lessons if l['status'] == 'completed')
+        completion_percentage = (completed / total_lessons * 100) if total_lessons > 0 else 0.0
+        
+        enrichment_summary = {
+            'not_started': not_started,
+            'in_progress': in_progress,
+            'completed': completed,
+            'completion_percentage': round(completion_percentage, 2)
+        }
+        
+        # Prepare result
+        result = {
+            'lessons': lessons,
+            'total_lessons': total_lessons,
+            'enrichment_summary': enrichment_summary,
+            'codebase_id': codebase_id
+        }
+        
+        # Log completion
+        duration_ms = (time.time() - start_time) * 1000
+        logger.info(
+            f"Tool completed: list_lessons_for_enrichment in {duration_ms:.2f}ms "
+            f"({total_lessons} lessons, {completed} completed, {completion_percentage:.1f}% done)"
+        )
+        
+        # Log slow operations
+        if config.log_slow_operations and duration_ms > config.slow_operation_threshold_ms:
+            logger.warning(f"Slow operation detected: list_lessons_for_enrichment took {duration_ms:.2f}ms")
+        
+        return result
+        
+    except ValueError as e:
+        raise ValueError(str(e))
+    except Exception as e:
+        logger.error(f"Error listing lessons for enrichment: {e}", exc_info=True)
+        raise RuntimeError(f"Failed to list lessons: {str(e)}")
+
+
+def _validate_enriched_content(content: dict) -> None:
+    """
+    Validate enriched content structure.
+    
+    Ensures required fields are present and have valid values.
+    
+    Args:
+        content: Enriched content dictionary to validate
+        
+    Raises:
+        ValueError: If validation fails
+    """
+    # Check required fields
+    required_fields = ['description', 'content']
+    for field in required_fields:
+        if field not in content:
+            raise ValueError(f"Missing required field: {field}")
+        if not content[field] or not isinstance(content[field], str):
+            raise ValueError(f"Field '{field}' must be a non-empty string")
+    
+    # Validate optional fields if present
+    if 'learning_objectives' in content:
+        if not isinstance(content['learning_objectives'], list):
+            raise ValueError("Field 'learning_objectives' must be a list")
+        if not content['learning_objectives']:
+            raise ValueError("Field 'learning_objectives' cannot be empty if provided")
+    
+    if 'code_examples' in content:
+        if not isinstance(content['code_examples'], list):
+            raise ValueError("Field 'code_examples' must be a list")
+        
+        # Validate each code example
+        for idx, example in enumerate(content['code_examples']):
+            if not isinstance(example, dict):
+                raise ValueError(f"Code example at index {idx} must be a dictionary")
+            if 'explanation' not in example and 'code' not in example:
+                raise ValueError(f"Code example at index {idx} must have 'code' or 'explanation' field")
+    
+    if 'exercises' in content:
+        if not isinstance(content['exercises'], list):
+            raise ValueError("Field 'exercises' must be a list")
+        
+        # Validate each exercise
+        for idx, exercise in enumerate(content['exercises']):
+            if not isinstance(exercise, dict):
+                raise ValueError(f"Exercise at index {idx} must be a dictionary")
+            # At least one of these fields should be present
+            if not any(key in exercise for key in ['title', 'description', 'instructions', 'hints']):
+                raise ValueError(
+                    f"Exercise at index {idx} must have at least one of: "
+                    f"title, description, instructions, hints"
+                )
 
 
 # Entry point for running the server

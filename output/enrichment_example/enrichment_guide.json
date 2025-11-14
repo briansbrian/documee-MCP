@@ -1,0 +1,382 @@
+{
+  "lesson_id": "module-2-lesson-3",
+  "feature_mapping": {
+    "feature_name": "User Authentication System",
+    "user_facing_purpose": "Allows users to securely log in and access protected resources",
+    "business_value": "Protects user data and ensures only authorized users can access sensitive features",
+    "entry_points": [
+      "POST /api/auth/login - Login endpoint",
+      "POST /api/auth/logout - Logout endpoint",
+      "GET /api/auth/verify - Token verification endpoint"
+    ],
+    "feature_flow": [
+      "User submits credentials (username/password)",
+      "Server validates credentials against database",
+      "Server generates JWT token on success",
+      "Client stores token in localStorage",
+      "Client includes token in Authorization header for protected requests",
+      "Server validates token on each protected request"
+    ]
+  },
+  "evidence_bundle": {
+    "source_files": [
+      {
+        "path": "src/auth/login.py",
+        "lines": [
+          15,
+          35
+        ],
+        "code": "def login(username, password):\n    user = db.get_user(username)\n    if not user:\n        return None\n    if bcrypt.checkpw(password, user.password_hash):\n        return create_session(user)\n    return None"
+      }
+    ],
+    "test_files": [
+      {
+        "path": "tests/test_auth.py",
+        "tests": [
+          "test_login_success",
+          "test_login_invalid_password",
+          "test_login_user_not_found"
+        ],
+        "descriptions": [
+          "Verifies successful login returns session token",
+          "Verifies invalid password returns None",
+          "Verifies non-existent user returns None"
+        ]
+      }
+    ],
+    "git_commits": [
+      {
+        "hash": "abc123f",
+        "message": "Add JWT authentication for API security",
+        "date": "2024-01-15",
+        "author": "Jane Developer"
+      },
+      {
+        "hash": "def456a",
+        "message": "Implement bcrypt password hashing",
+        "date": "2024-01-10",
+        "author": "John Security"
+      }
+    ],
+    "documentation": [
+      {
+        "type": "inline_comment",
+        "content": "Use bcrypt for password hashing to prevent rainbow table attacks",
+        "location": "src/auth/login.py:18"
+      },
+      {
+        "type": "readme",
+        "content": "Authentication uses JWT tokens with 1-hour expiration",
+        "location": "README.md:45"
+      }
+    ],
+    "dependencies": [
+      {
+        "name": "bcrypt",
+        "reason": "Secure password hashing",
+        "evidence": "import bcrypt at line 3"
+      },
+      {
+        "name": "jwt",
+        "reason": "Token generation and validation",
+        "evidence": "import jwt at line 4"
+      }
+    ],
+    "dependents": [
+      {
+        "name": "src/api/routes.py",
+        "usage": "Calls login() for POST /api/auth/login endpoint",
+        "evidence": "from auth.login import login at line 12"
+      }
+    ]
+  },
+  "validation_checklist": {
+    "code_behavior": "The login function retrieves user from database, compares password hash using bcrypt, and creates session on success",
+    "expected_behavior": "Tests expect login to return session token for valid credentials and None for invalid credentials",
+    "documentation_alignment": "Code matches documentation: uses bcrypt for hashing and JWT for tokens",
+    "git_context": "Feature was added for API security (commit abc123f), bcrypt chosen to prevent rainbow table attacks (commit def456a)",
+    "consistency_check": true
+  },
+  "teaching_value_assessment": {
+    "scores": {
+      "reusability": 3,
+      "best_practice": 3,
+      "fundamentality": 3,
+      "uniqueness": 2,
+      "junior_dev": 3
+    },
+    "total_score": 14,
+    "should_teach": true,
+    "reasoning": "Authentication is fundamental (3), follows security best practices with bcrypt and JWT (3), highly reusable pattern (3), interesting implementation details (2), and essential knowledge for junior developers (3)"
+  },
+  "systematic_investigation": {
+    "what_it_does": "The login function validates user credentials by comparing the provided password against the stored bcrypt hash (line 20), then creates a JWT session token if authentication succeeds (line 21)",
+    "why_it_exists": "This feature was added to secure the API and protect user data (git commit abc123f). Bcrypt was specifically chosen to prevent rainbow table attacks (git commit def456a)",
+    "how_it_works": "The function first retrieves the user from the database (line 16). If the user doesn't exist, it returns None immediately (line 18). For existing users, it uses bcrypt.checkpw() to safely compare the password with the stored hash (line 20), which prevents timing attacks. On success, it calls create_session() to generate a JWT token (line 21)",
+    "when_its_used": [
+      "POST /api/auth/login endpoint (src/api/routes.py:45)",
+      "Mobile app login flow (mobile/src/auth/AuthService.ts:23)",
+      "Admin panel authentication (admin/login.html:67)"
+    ],
+    "edge_cases": [
+      "Non-existent user returns None (test_auth.py:34)",
+      "Invalid password returns None (test_auth.py:45)",
+      "Empty username/password handled by validation layer (test_auth.py:56)"
+    ],
+    "common_pitfalls": [
+      "Never use == to compare passwords - timing attacks (comment at line 19)",
+      "Don't return different errors for invalid username vs password - information leakage (test_auth.py:67)",
+      "Always rate limit login attempts - brute force protection (TODO at line 25)"
+    ]
+  },
+  "narrative_structure": {
+    "introduction_points": [
+      "Authentication is the foundation of secure web applications",
+      "This lesson covers password hashing and session tokens",
+      "You'll learn industry-standard security practices"
+    ],
+    "learning_progression": [
+      "Understanding authentication vs authorization",
+      "Why password hashing is critical",
+      "How bcrypt prevents rainbow table attacks",
+      "What JWT tokens are and why they're useful",
+      "Implementing secure login flow",
+      "Common security vulnerabilities to avoid"
+    ],
+    "code_walkthrough_order": [
+      "src/auth/login.py:15-35 - Main login function",
+      "src/auth/session.py:8-20 - Session token creation",
+      "src/auth/middleware.py:12-30 - Token validation",
+      "tests/test_auth.py:34-67 - Test cases showing expected behavior"
+    ],
+    "conclusion_points": [
+      "Never store passwords in plain text",
+      "Always use secure hashing algorithms like bcrypt",
+      "Implement rate limiting to prevent brute force attacks",
+      "Use timing-safe comparison to prevent timing attacks"
+    ],
+    "next_steps": [
+      "Implement password reset functionality",
+      "Add multi-factor authentication (2FA)",
+      "Learn about OAuth2 for third-party login",
+      "Explore session management and token refresh"
+    ]
+  },
+  "code_sections": [
+    {
+      "file_path": "src/auth/login.py",
+      "line_range": [
+        15,
+        35
+      ],
+      "code_snippet": "def login(username, password):\n    user = db.get_user(username)\n    if not user:\n        return None\n    if bcrypt.checkpw(password, user.password_hash):\n        return create_session(user)\n    return None",
+      "purpose": "Validates user credentials and creates a session token on success. Uses bcrypt for secure password comparison to prevent timing attacks (verified by test_auth.py:45)",
+      "key_concepts": [
+        "Password hashing with bcrypt",
+        "Timing-safe password comparison",
+        "Session token generation",
+        "Error handling without information leakage"
+      ],
+      "explanation_approach": [
+        "Start by explaining why we retrieve the user first",
+        "Emphasize the importance of returning None for both invalid username and password",
+        "Explain bcrypt.checkpw() and why it's better than simple comparison",
+        "Walk through the happy path (successful login)",
+        "Discuss error cases and security implications"
+      ],
+      "related_code": [
+        {
+          "path": "src/auth/session.py:create_session",
+          "context": "Called on successful authentication to generate JWT token",
+          "relationship": "depends_on"
+        },
+        {
+          "path": "src/models/user.py:User.password_hash",
+          "context": "Stores the bcrypt hash of the user's password",
+          "relationship": "uses"
+        }
+      ],
+      "test_evidence": [
+        {
+          "test_name": "test_login_success",
+          "description": "Verifies that valid credentials return a session token",
+          "file": "tests/test_auth.py:34"
+        },
+        {
+          "test_name": "test_login_invalid_password",
+          "description": "Verifies that invalid password returns None",
+          "file": "tests/test_auth.py:45"
+        }
+      ],
+      "git_evidence": [
+        {
+          "commit": "abc123f",
+          "message": "Add JWT authentication for API security",
+          "date": "2024-01-15"
+        }
+      ],
+      "common_mistakes": [
+        "Using == to compare passwords (vulnerable to timing attacks)",
+        "Returning different errors for invalid username vs password (information leakage)",
+        "Not rate limiting login attempts (vulnerable to brute force)"
+      ]
+    }
+  ],
+  "architecture_context": {
+    "component_role": "Handles user authentication and session management for the application. Acts as the security gateway between public endpoints and protected resources",
+    "data_flow": "User credentials \u00e2\u2020\u2019 Login validation \u00e2\u2020\u2019 Password hash comparison \u00e2\u2020\u2019 Session creation \u00e2\u2020\u2019 JWT token \u00e2\u2020\u2019 Client storage \u00e2\u2020\u2019 Authorization header \u00e2\u2020\u2019 Token validation \u00e2\u2020\u2019 Protected resource access",
+    "interaction_diagram": "```mermaid\nsequenceDiagram\n    Client->>API: POST /login\n    API->>AuthService: login(username, password)\n    AuthService->>Database: get_user(username)\n    Database-->>AuthService: User object\n    AuthService->>AuthService: bcrypt.checkpw()\n    AuthService->>SessionService: create_session(user)\n    SessionService->>Database: save(session)\n    SessionService-->>AuthService: token\n    AuthService-->>API: token\n    API-->>Client: {token: 'jwt...'}\n```",
+    "dependencies": [
+      {
+        "name": "Database layer (src/db/)",
+        "reason": "Retrieves user records for authentication",
+        "evidence": "db.get_user() call at line 16"
+      },
+      {
+        "name": "bcrypt library",
+        "reason": "Secure password hashing and comparison",
+        "evidence": "import bcrypt at line 3"
+      }
+    ],
+    "dependents": [
+      {
+        "name": "API routes (src/api/routes.py)",
+        "usage": "Calls login() for authentication endpoints",
+        "evidence": "from auth.login import login at line 12"
+      },
+      {
+        "name": "Authentication middleware",
+        "usage": "Uses session tokens to protect routes",
+        "evidence": "from auth.session import verify_token at line 8"
+      }
+    ],
+    "design_patterns": [
+      {
+        "pattern": "Token-based authentication",
+        "evidence": "JWT token generation in create_session()",
+        "explanation": "Stateless authentication using JWT tokens instead of server-side sessions"
+      },
+      {
+        "pattern": "Secure password storage",
+        "evidence": "bcrypt hashing with salt",
+        "explanation": "One-way hashing prevents password recovery even if database is compromised"
+      }
+    ]
+  },
+  "real_world_context": {
+    "practical_use_cases": [
+      "Web application login systems",
+      "Mobile app authentication",
+      "API authentication for third-party integrations",
+      "Single sign-on (SSO) systems",
+      "Admin panel access control"
+    ],
+    "analogies": [
+      "Password hashing is like a one-way safe - you can put things in but can't get them back out, only verify if what you put in matches",
+      "Session tokens are like movie tickets - they prove you paid (authenticated) without needing to show your credit card every time",
+      "Rate limiting is like a bank vault time delay - even if someone has the combination, they can't try it repeatedly",
+      "Timing-safe comparison is like taking the same time to check every lock, so burglars can't tell which key is closer to correct"
+    ],
+    "industry_patterns": [
+      "Token-based authentication (JWT) - widely used in REST APIs",
+      "Password hashing with bcrypt/argon2 - industry standard",
+      "Session management patterns - stateless vs stateful",
+      "Defense in depth security - multiple layers of protection"
+    ],
+    "best_practices": [
+      "Use bcrypt or argon2 for password hashing (never MD5 or SHA1)",
+      "Implement rate limiting on login endpoints (prevent brute force)",
+      "Use HTTPS for all authentication requests (prevent man-in-the-middle)",
+      "Set appropriate token expiration times (balance security and UX)",
+      "Implement refresh token rotation (long-lived sessions)",
+      "Log authentication attempts (security monitoring)"
+    ],
+    "anti_patterns": [
+      "Storing passwords in plain text or with reversible encryption",
+      "Using simple hash functions like MD5 or SHA1",
+      "Returning different error messages for invalid username vs password",
+      "Not implementing rate limiting or account lockout",
+      "Storing sensitive data in JWT payload (it's encoded, not encrypted)",
+      "Using predictable session IDs or tokens"
+    ]
+  },
+  "exercise_generation": {
+    "hands_on_tasks": [
+      {
+        "title": "Add Password Strength Validation",
+        "description": "Implement a function that validates password strength (minimum length, special characters, numbers) before hashing",
+        "difficulty": "beginner"
+      },
+      {
+        "title": "Implement Token Refresh",
+        "description": "Add a refresh token mechanism to extend sessions without requiring re-login",
+        "difficulty": "intermediate"
+      },
+      {
+        "title": "Add Rate Limiting",
+        "description": "Implement rate limiting to prevent brute force attacks (max 5 attempts per minute per IP)",
+        "difficulty": "intermediate"
+      }
+    ],
+    "starter_code": "def login(username, password):\n    # TODO: Validate input\n    # TODO: Retrieve user from database\n    # TODO: Compare password hash\n    # TODO: Create session on success\n    pass",
+    "solution_code": "def login(username, password):\n    user = db.get_user(username)\n    if not user:\n        return None\n    if bcrypt.checkpw(password, user.password_hash):\n        return create_session(user)\n    return None",
+    "test_cases": [
+      {
+        "name": "test_login_success",
+        "description": "Valid credentials should return session token",
+        "input": {
+          "username": "testuser",
+          "password": "correct_password"
+        },
+        "expected": "session_token"
+      },
+      {
+        "name": "test_login_invalid_password",
+        "description": "Invalid password should return None",
+        "input": {
+          "username": "testuser",
+          "password": "wrong_password"
+        },
+        "expected": null
+      }
+    ],
+    "progressive_hints": [
+      "Remember that JWTs have three parts: header, payload, and signature. The jwt.encode() function handles all three.",
+      "Check the bcrypt library documentation for the checkpw() method. You'll need to pass the plain password and the stored hash.",
+      "The checkpw() function automatically handles timing-safe comparison. It will raise an exception if the hash format is invalid.",
+      "Wrap your password check in a try-except block to catch bcrypt.InvalidHashError and return None gracefully.",
+      "Don't forget to handle the case where the user doesn't exist - return None immediately without checking the password."
+    ],
+    "self_assessment": [
+      "Why do we use bcrypt instead of SHA256 for password hashing?",
+      "What security vulnerability does timing-safe comparison prevent?",
+      "Why should JWT tokens have an expiration time?",
+      "What's the difference between authentication and authorization?",
+      "Why is it important to return the same error for invalid username and invalid password?"
+    ]
+  },
+  "anti_hallucination_rules": {
+    "always_cite": "Never explain without citing evidence",
+    "distinguish_fact_inference": "Mark inferences clearly",
+    "validate_against_tests": "Check tests before explaining",
+    "cross_reference": "Verify across multiple files",
+    "avoid_assumptions": "Don't guess the 'why'"
+  },
+  "enrichment_instructions": {
+    "tone": "casual",
+    "depth": "detailed",
+    "focus_areas": [
+      "Security implications of each design choice",
+      "Why certain approaches are better than alternatives",
+      "Common mistakes and how to avoid them",
+      "Real-world applications of these patterns"
+    ],
+    "avoid_topics": [
+      "Overly academic security theory",
+      "Cryptography mathematics",
+      "Framework-specific implementation details",
+      "Deprecated security practices"
+    ],
+    "evidence_requirements": "Cite for every claim"
+  }
+}

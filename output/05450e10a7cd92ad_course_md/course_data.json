@@ -1,0 +1,93 @@
+{
+  "course_id": "1e277fc7-9817-4637-a288-42b359035248",
+  "title": "Learn 05450E10A7Cd92Ad",
+  "description": "A comprehensive course with 1 modules covering 1 files and 3 patterns.",
+  "author": "Documee Course Generator",
+  "version": "1.0.0",
+  "created_at": "2025-11-14T02:06:00.775715",
+  "total_duration_hours": 1.0,
+  "difficulty_distribution": {
+    "beginner": 1,
+    "intermediate": 0,
+    "advanced": 0
+  },
+  "tags": [
+    "global_password_hashing",
+    "global_jwt_authentication",
+    "global_session_authentication"
+  ],
+  "prerequisites": [],
+  "modules": [
+    {
+      "module_id": "184efd87-bfca-46a9-aea7-551f80c41616",
+      "title": "Module 1: Jwt Authentication",
+      "description": "This module covers: session_authentication, password_hashing, jwt_authentication",
+      "order": 0,
+      "difficulty": "beginner",
+      "duration_hours": 1.0,
+      "learning_objectives": [
+        "Master jwt authentication patterns",
+        "Master session authentication patterns",
+        "Master password hashing patterns",
+        "Build foundational programming skills"
+      ],
+      "lessons": [
+        {
+          "lesson_id": "d77abaeb-f45a-4c0a-920f-aa6f6e193053",
+          "title": "Auth: Jwt Authentication",
+          "description": "Excellent teaching value (score: 0.73). Well-documented (100% coverage). Too simple (avg complexity: 1.8) for teaching. Contains useful patterns. Well-structured code. Demonstrates: jwt_authentication, session_authentication, password_hashing",
+          "order": 0,
+          "difficulty": "beginner",
+          "duration_minutes": 60,
+          "file_path": "C:\\Users\\brian\\AppData\\Local\\Temp\\tmpug9pgo19\\src\\auth.py",
+          "teaching_value": 0.725,
+          "learning_objectives": [
+            "Understand jwt authentication pattern",
+            "Understand session authentication pattern",
+            "Understand password hashing pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "jwt_authentication",
+            "session_authentication",
+            "password_hashing"
+          ],
+          "exercises": [
+            {
+              "exercise_id": "7294cb15-d980-4a33-a7a0-d1d0c0d43a32",
+              "title": "Practice: Jwt Authentication",
+              "description": "Implement a jwt_authentication based on the example from C:\\Users\\brian\\AppData\\Local\\Temp\\tmpug9pgo19\\src\\auth.py",
+              "difficulty": "beginner",
+              "estimated_minutes": 35,
+              "instructions": [
+                "Implement the jwt_authentication following the pattern shown",
+                "Ensure all required functionality is included",
+                "Test your implementation with the provided test cases",
+                "Key concepts to include: Imports JWT library: jwt, JWT operation: JWT, JWT operation: JWT"
+              ],
+              "starter_code": "import bcrypt\nfrom datetime import datetime, timedelta\nimport jwt\n\n\n\ndef authenticate_user(username: str, password: str):\n    \"\"\"\n    # TODO: Implement jwt_authentication logic here\n    pass\n    \n        \n    \"\"\"\n    # Verify password (simplified for testing)\n        # Generate JWT token\n\n\ndef generate_token(username: str, expires_in: int = 3600):\n    \"\"\"\n    # TODO: Implement jwt_authentication logic here\n    pass\n    \n        \n    \"\"\"\n\n\ndef validate_token(token: str):\n    \"\"\"\n    # TODO: Implement jwt_authentication logic here\n    pass\n    \n        \n    \"\"\"",
+              "solution_code": "import bcrypt\nfrom datetime import datetime, timedelta\nimport jwt\n\nSECRET_KEY = \"test_secret_key\"\n\n\ndef authenticate_user(username: str, password: str):\n    \"\"\"\n    Authenticate user with username and password.\n    \n    Args:\n        username: User's username\n        password: User's password\n        \n    Returns:\n        Session token if authentication successful, None otherwise\n    \"\"\"\n    # Verify password (simplified for testing)\n    if username and password:\n        # Generate JWT token\n        token = generate_token(username)\n        return token\n    return None\n\n\ndef generate_token(username: str, expires_in: int = 3600):\n    \"\"\"\n    Generate JWT token for authenticated user.\n    \n    Args:\n        username: Username to encode in token\n        expires_in: Token expiration time in seconds (default: 1 hour)\n        \n    Returns:\n        JWT token string\n    \"\"\"\n    payload = {\n        \"username\": username,\n        \"exp\": datetime.utcnow() + timedelta(seconds=expires_in)\n    }\n    return jwt.encode(payload, SECRET_KEY, algorithm=\"HS256\")\n\n\ndef validate_token(token: str):\n    \"\"\"\n    Validate JWT token.\n    \n    Args:\n        token: JWT token to validate\n        \n    Returns:\n        Decoded payload if valid, None if invalid\n    \"\"\"\n    try:\n        payload = jwt.decode(token, SECRET_KEY, algorithms=[\"HS256\"])\n        return payload\n    except jwt.ExpiredSignatureError:",
+              "hints": [
+                "Start by understanding the structure of a jwt_authentication. Look at the imports and main components needed.",
+                "Key elements to implement: 7 main components. Focus on the function signatures and return values first.",
+                "You'll need these imports: import bcrypt"
+              ],
+              "learning_objectives": [
+                "Understand how to implement a Jwt Authentication",
+                "Practice writing clean, maintainable code for Jwt Authentication",
+                "Apply Imports JWT library: jwt in your implementation",
+                "Apply JWT operation: JWT in your implementation"
+              ]
+            }
+          ],
+          "tags": [
+            "jwt_authentication",
+            "session_authentication",
+            "password_hashing"
+          ]
+        }
+      ]
+    }
+  ]
+}

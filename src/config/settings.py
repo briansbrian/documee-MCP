@@ -83,6 +83,32 @@ class Settings:
                 "file": "server.log",
                 "max_size_mb": 10,
                 "backup_count": 3
+            },
+            "ai_enrichment": {
+                "skill_level": "beginner",
+                "tone": "casual",
+                "depth": "detailed",
+                "content_options": {
+                    "include_analogies": True,
+                    "include_diagrams": True,
+                    "include_examples": True,
+                    "include_exercises": True,
+                    "include_best_practices": True,
+                    "include_anti_patterns": True,
+                    "include_real_world_context": True,
+                    "progressive_hints": True
+                },
+                "evidence_requirements": {
+                    "always_cite_sources": True,
+                    "validate_against_tests": True,
+                    "cross_reference_files": True,
+                    "include_git_context": True
+                },
+                "teaching_value": {
+                    "min_score_to_teach": 7,
+                    "prioritize_fundamentals": True,
+                    "focus_on_reusability": True
+                }
             }
         }
         
@@ -144,6 +170,31 @@ class Settings:
                 logger.info(f"Override: analysis.max_file_size_mb = {os.environ['MAX_FILE_SIZE_MB']}")
             except ValueError:
                 logger.warning(f"Invalid MAX_FILE_SIZE_MB value: {os.environ['MAX_FILE_SIZE_MB']}")
+        
+        # Enrichment overrides
+        if "ENRICHMENT_SKILL_LEVEL" in os.environ:
+            skill_level = os.environ["ENRICHMENT_SKILL_LEVEL"]
+            if skill_level in ["beginner", "intermediate", "advanced"]:
+                self.config["ai_enrichment"]["skill_level"] = skill_level
+                logger.info(f"Override: ai_enrichment.skill_level = {skill_level}")
+            else:
+                logger.warning(f"Invalid ENRICHMENT_SKILL_LEVEL value: {skill_level}")
+        
+        if "ENRICHMENT_TONE" in os.environ:
+            tone = os.environ["ENRICHMENT_TONE"]
+            if tone in ["casual", "formal", "technical"]:
+                self.config["ai_enrichment"]["tone"] = tone
+                logger.info(f"Override: ai_enrichment.tone = {tone}")
+            else:
+                logger.warning(f"Invalid ENRICHMENT_TONE value: {tone}")
+        
+        if "ENRICHMENT_DEPTH" in os.environ:
+            depth = os.environ["ENRICHMENT_DEPTH"]
+            if depth in ["brief", "moderate", "detailed", "comprehensive"]:
+                self.config["ai_enrichment"]["depth"] = depth
+                logger.info(f"Override: ai_enrichment.depth = {depth}")
+            else:
+                logger.warning(f"Invalid ENRICHMENT_DEPTH value: {depth}")
     
     def _validate(self):
         """Validate configuration values.
@@ -201,6 +252,26 @@ class Settings:
         backup_count = self.config["logging"]["backup_count"]
         if backup_count < 0:
             raise ValueError(f"Invalid configuration: logging.backup_count must be non-negative, got {backup_count}")
+        
+        # Validate enrichment settings
+        valid_skill_levels = ["beginner", "intermediate", "advanced"]
+        skill_level = self.config["ai_enrichment"]["skill_level"]
+        if skill_level not in valid_skill_levels:
+            raise ValueError(f"Invalid configuration: ai_enrichment.skill_level must be one of {valid_skill_levels}, got {skill_level}")
+        
+        valid_tones = ["casual", "formal", "technical"]
+        tone = self.config["ai_enrichment"]["tone"]
+        if tone not in valid_tones:
+            raise ValueError(f"Invalid configuration: ai_enrichment.tone must be one of {valid_tones}, got {tone}")
+        
+        valid_depths = ["brief", "moderate", "detailed", "comprehensive"]
+        depth = self.config["ai_enrichment"]["depth"]
+        if depth not in valid_depths:
+            raise ValueError(f"Invalid configuration: ai_enrichment.depth must be one of {valid_depths}, got {depth}")
+        
+        min_score = self.config["ai_enrichment"]["teaching_value"]["min_score_to_teach"]
+        if not (0 <= min_score <= 14):
+            raise ValueError(f"Invalid configuration: ai_enrichment.teaching_value.min_score_to_teach must be between 0 and 14, got {min_score}")
     
     # Property accessors for easy access to configuration values
     
@@ -313,3 +384,60 @@ class Settings:
     def log_backup_count(self) -> int:
         """Get log file backup count."""
         return self.config["logging"]["backup_count"]
+    
+    # AI Enrichment Configuration
+    
+    @property
+    def enrichment_skill_level(self) -> str:
+        """Get enrichment skill level (beginner, intermediate, advanced)."""
+        return self.config["ai_enrichment"]["skill_level"]
+    
+    @property
+    def enrichment_tone(self) -> str:
+        """Get enrichment tone (casual, formal, technical)."""
+        return self.config["ai_enrichment"]["tone"]
+    
+    @property
+    def enrichment_depth(self) -> str:
+        """Get enrichment depth (brief, moderate, detailed, comprehensive)."""
+        return self.config["ai_enrichment"]["depth"]
+    
+    @property
+    def enrichment_content_options(self) -> dict:
+        """Get enrichment content options."""
+        return self.config["ai_enrichment"]["content_options"]
+    
+    @property
+    def enrichment_evidence_requirements(self) -> dict:
+        """Get enrichment evidence requirements."""
+        return self.config["ai_enrichment"]["evidence_requirements"]
+    
+    @property
+    def enrichment_teaching_value(self) -> dict:
+        """Get enrichment teaching value settings."""
+        return self.config["ai_enrichment"]["teaching_value"]
+    
+    @property
+    def enrichment_min_score_to_teach(self) -> int:
+        """Get minimum teaching value score to include content."""
+        return self.config["ai_enrichment"]["teaching_value"]["min_score_to_teach"]
+    
+    @property
+    def enrichment_include_analogies(self) -> bool:
+        """Check if analogies should be included."""
+        return self.config["ai_enrichment"]["content_options"]["include_analogies"]
+    
+    @property
+    def enrichment_include_diagrams(self) -> bool:
+        """Check if diagrams should be included."""
+        return self.config["ai_enrichment"]["content_options"]["include_diagrams"]
+    
+    @property
+    def enrichment_always_cite_sources(self) -> bool:
+        """Check if sources must always be cited."""
+        return self.config["ai_enrichment"]["evidence_requirements"]["always_cite_sources"]
+    
+    @property
+    def enrichment_validate_against_tests(self) -> bool:
+        """Check if validation against tests is required."""
+        return self.config["ai_enrichment"]["evidence_requirements"]["validate_against_tests"]

@@ -47,12 +47,60 @@ Analyze this codebase using the documee MCP server.
 
 ---
 
-### Path 3: Interactive Testing (5 minutes) 🧪
+### Path 3: AI Content Enrichment (10 minutes) 🎨
+
+**Goal:** Transform basic courses into rich educational materials
+
+**Steps:**
+
+1. Generate a basic course:
+```python
+# In Kiro or MCP client
+result = await mcp.call_tool("export_course", {
+    "codebase_id": "<your_codebase_id>",
+    "format": "json"
+})
+```
+
+2. Get enrichment guide for a lesson:
+```python
+guide = await mcp.call_tool("get_enrichment_guide", {
+    "codebase_id": "<your_codebase_id>",
+    "lesson_id": "module-1-lesson-1"
+})
+```
+
+3. Use the guide to enrich content (with Kiro):
+```
+Using the enrichment guide, create beginner-friendly explanations 
+with analogies, progressive hints, and evidence-based content.
+```
+
+4. Update the lesson:
+```python
+result = await mcp.call_tool("update_lesson_content", {
+    "codebase_id": "<your_codebase_id>",
+    "lesson_id": "module-1-lesson-1",
+    "enriched_content": {
+        "description": "...",
+        "content": "...",
+        "exercises": [...]
+    }
+})
+```
+
+**Expected:** Lessons transformed with rich explanations, analogies, and exercises
+
+**Next:** Export enriched course to MkDocs or Next.js
+
+---
+
+### Path 4: Interactive Testing (5 minutes) 🧪
 
 **Goal:** Test all tools interactively
 
 ```bash
-npx @modelcontextprotocol/inspector python -m src.server
+npx @modelcontextprotocol/inspector c:\Users\brian\OneDrive\Documents\Apps\Documee_mcp\venv\Scripts\python.exe -m src.server
 ```
 
 **Expected:** Browser opens at `http://localhost:5173`
@@ -103,7 +151,12 @@ Use Path 1, 2, or 3 instead.
 10. create_exercise
 11. export_course
 
-**Total:** 11 tools, 2 resources, 1 prompt
+**AI Enrichment Tools (Spec 4):**
+12. get_enrichment_guide
+13. update_lesson_content
+14. list_lessons_for_enrichment
+
+**Total:** 14 tools, 2 resources, 1 prompt
 
 ### "Is it working?"
 
@@ -117,7 +170,8 @@ Yes! All tests pass:
 After testing locally:
 1. Use with Kiro for development
 2. Test with real codebases
-3. Create Spec 4 (Azure Deployment)
+3. Try AI content enrichment workflow
+4. Enrich generated courses with evidence-based content
 
 ---
 
@@ -130,6 +184,7 @@ After testing locally:
 | **QUICK_START.md** | 5-minute setup guide |
 | **LOCAL_TEST_GUIDE.md** | Detailed testing guide |
 | **INTEGRATION_READY.md** | Integration instructions |
+| **AI_CONTENT_ENRICHMENT.md** | AI enrichment workflow guide |
 | **README.md** | Complete documentation |
 
 ---

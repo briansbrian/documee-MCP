@@ -242,9 +242,11 @@ documee-mcp/
 **Status:** Foundation code is correct. Specification documents need updates before server implementation.
 
 ### Essential Docs (Start Here)
+- **[START_HERE.md](docs/START_HERE.md)** - Quick start guide
 - **[ULTIMATE-MCP-SERVER.md](docs/ULTIMATE-MCP-SERVER.md)** - Complete implementation guide
 - **[GOD-MODE-TOOLKIT.md](docs/GOD-MODE-TOOLKIT.md)** - Vision and capabilities
 - **[QUICK-START-GUIDE.md](docs/QUICK-START-GUIDE.md)** - Get started in 5 minutes
+- **[AI_CONTENT_ENRICHMENT.md](docs/AI_CONTENT_ENRICHMENT.md)** - AI-powered content enrichment guide
 - **[INDEX.md](docs/INDEX.md)** - Complete documentation index
 
 ### Additional Resources
@@ -390,6 +392,83 @@ result = await mcp.call_tool("discover_features", {
 - `components`: UI components, widgets (medium priority)
 - `utils`: Utilities, helpers, libraries (medium priority)
 - `hooks`: React hooks, Vue composables (medium priority)
+
+### AI Content Enrichment Tools
+
+Transform basic course content into rich, educational materials with evidence-based enrichment.
+
+#### get_enrichment_guide
+
+Get comprehensive, evidence-based guidance for enriching lesson content:
+
+```python
+result = await mcp.call_tool("get_enrichment_guide", {
+    "codebase_id": "a1b2c3d4e5f6g7h8",
+    "lesson_id": "module-1-lesson-1"
+})
+
+# Returns comprehensive guide with:
+# - Feature mapping (what users do with this code)
+# - Evidence bundle (source files, tests, commits, docs)
+# - Validation checklist (consistency across sources)
+# - Teaching value assessment (why this is worth teaching)
+# - Systematic investigation (what, why, how, when, edge cases)
+# - Narrative structure (how to organize the explanation)
+# - Code section guides (detailed guidance for each snippet)
+# - Architecture context (how it fits in the system)
+# - Real-world context (practical use cases, analogies)
+# - Exercise generation (hands-on practice with hints)
+# - Anti-hallucination rules (always cite evidence)
+```
+
+#### update_lesson_content
+
+Update lesson with enriched content:
+
+```python
+result = await mcp.call_tool("update_lesson_content", {
+    "codebase_id": "a1b2c3d4e5f6g7h8",
+    "lesson_id": "module-1-lesson-1",
+    "enriched_content": {
+        "description": "Enhanced description with context and goals",
+        "content": "Full learning narrative with progressive explanation",
+        "code_examples": [
+            {"explanation": "Enhanced explanation with evidence citations"}
+        ],
+        "exercises": [
+            {
+                "description": "Clear, engaging description",
+                "instructions": "Numbered, specific steps",
+                "hints": ["Progressive hints from general to specific"]
+            }
+        ],
+        "learning_objectives": ["Specific, measurable learning goals"]
+    }
+})
+```
+
+#### list_lessons_for_enrichment
+
+Get list of lessons ready for enrichment:
+
+```python
+result = await mcp.call_tool("list_lessons_for_enrichment", {
+    "codebase_id": "a1b2c3d4e5f6g7h8"
+})
+
+# Returns list of lessons with:
+# - lesson_id, title, status (pending/completed)
+# - source_files, teaching_value_score
+# - Sorted by teaching value (high to low)
+```
+
+**Enrichment Features:**
+- Evidence-based content generation (cite code, tests, commits, docs)
+- Beginner-friendly explanations with analogies
+- Progressive learning narratives (simple → complex)
+- Hands-on exercises with progressive hints
+- Anti-hallucination validation (cross-reference sources)
+- Teaching value assessment (focus on high-value content)
 
 ### MCP Resources
 
@@ -971,6 +1050,7 @@ If you encounter issues not covered here:
 - **Document patterns** - Extract and teach best practices
 - **Code reviews** - Understand architecture quickly
 - **Technical writing** - Auto-generate documentation
+- **AI-powered content enrichment** - Transform basic courses into rich educational materials with evidence-based explanations, analogies, and exercises
 
 ## 🤝 Contributing
 

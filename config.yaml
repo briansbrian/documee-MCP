@@ -78,3 +78,33 @@ logging:
   file: server.log
   max_size_mb: 10
   backup_count: 3
+
+ai_enrichment:
+  # Default enrichment settings for AI-generated content
+  skill_level: beginner  # beginner, intermediate, advanced
+  tone: casual  # casual, formal, technical
+  depth: detailed  # brief, moderate, detailed, comprehensive
+  
+  # Content generation options
+  content_options:
+    include_analogies: true  # Include real-world analogies for concepts
+    include_diagrams: true  # Include architecture and flow diagrams
+    include_examples: true  # Include practical code examples
+    include_exercises: true  # Include hands-on exercises
+    include_best_practices: true  # Highlight best practices
+    include_anti_patterns: true  # Warn about common pitfalls
+    include_real_world_context: true  # Add industry context
+    progressive_hints: true  # Provide progressive hints for exercises
+  
+  # Evidence and validation requirements
+  evidence_requirements:
+    always_cite_sources: true  # Require citations for all claims
+    validate_against_tests: true  # Cross-check with test files
+    cross_reference_files: true  # Verify consistency across files
+    include_git_context: true  # Include git history context
+  
+  # Teaching value thresholds
+  teaching_value:
+    min_score_to_teach: 7  # Minimum score (0-14) to include in course
+    prioritize_fundamentals: true  # Prioritize fundamental concepts
+    focus_on_reusability: true  # Emphasize reusable patterns

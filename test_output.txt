@@ -1,0 +1,40 @@
+﻿venv\Scripts\python.exe : 2025-11-14 00:15:43,898 - src.cache.unified_cache - INFO - Initializing UnifiedCacheManager (max_memory: 100.0MB)
+At line:1 char:1
++ venv\Scripts\python.exe tests/test_update_lesson_content_manual.py 2> ...
++ ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~
+    + CategoryInfo          : NotSpecified: (2025-11-14 00:1...emory: 100.0MB):String) [], RemoteException
+    + FullyQualifiedErrorId : NativeCommandError
+ 
+2025-11-14 00:15:43,914 - src.cache.unified_cache - INFO - SQLite cache initialized at cache_db/test_enrichment.db
+2025-11-14 00:15:43,914 - src.cache.unified_cache - INFO - UnifiedCacheManager initialization complete
+2025-11-14 00:15:43,919 - src.config.settings - INFO - Configuration loaded from config.yaml
+2025-11-14 00:15:43,920 - src.analysis.engine - INFO - Initializing Analysis Engine components...
+C:\Users\brian\OneDrive\Documents\Apps\Documee_mcp\venv\Lib\site-packages\tree_sitter\__init__.py:36: FutureWarning: Language(path, name) is 
+deprecated. Use Language(ptr, name) instead.
+  warn("{} is deprecated. Use {} instead.".format(old, new), FutureWarning)
+2025-11-14 00:15:43,923 - src.analysis.ast_parser - INFO - ASTParserManager initialized with 10 languages
+2025-11-14 00:15:43,924 - src.analysis.persistence - INFO - Persistence Manager initialized with base path: .documee\analysis
+2025-11-14 00:15:43,924 - src.analysis.engine - INFO - Analysis Engine initialized successfully with all components
+================================================================================
+Testing update_lesson_content MCP Tool
+================================================================================
+
+1. Initializing app context...
+Traceback (most recent call last):
+  File "C:\Users\brian\OneDrive\Documents\Apps\Documee_mcp\tests\test_update_lesson_content_manual.py", line 194, in <module>
+    asyncio.run(test_update_lesson_content())
+  File "C:\Users\brian\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 195, in run
+    return runner.run(main)
+           ^^^^^^^^^^^^^^^^
+  File "C:\Users\brian\AppData\Local\Programs\Python\Python312\Lib\asyncio\runners.py", line 118, in run
+    return self._loop.run_until_complete(task)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "C:\Users\brian\AppData\Local\Programs\Python\Python312\Lib\asyncio\base_events.py", line 691, in run_until_complete
+    return future.result()
+           ^^^^^^^^^^^^^^^
+  File "C:\Users\brian\OneDrive\Documents\Apps\Documee_mcp\tests\test_update_lesson_content_manual.py", line 57, in test_update_lesson_content
+    print("\u2713 App context initialized")
+  File "C:\Users\brian\AppData\Local\Programs\Python\Python312\Lib\encodings\cp1252.py", line 19, in encode
+    return codecs.charmap_encode(input,self.errors,encoding_table)[0]
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+UnicodeEncodeError: 'charmap' codec can't encode character '\u2713' in position 0: character maps to <undefined>

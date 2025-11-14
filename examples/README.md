@@ -511,11 +511,94 @@ The following examples were created during development and are also available:
 - `pattern_detector_example.py` - Pattern detection
 - `linter_integration_example.py` - Linter integration
 
-### Other Tools
+### Course Generation & Enrichment
 - `course_generator_example.py` - Course generation
+- `enrichment_example.py` - AI content enrichment workflow
+- `enrichment_guide_sample.json` - Complete enrichment guide example
 - `metadata_generator_example.py` - Metadata generation
 - `mkdocs_export_example.py` - MkDocs export
+
+### Other Tools
 - `logging_example.py` - Logging configuration
+
+---
+
+## AI Content Enrichment Examples
+
+### Enrichment Workflow
+**File:** `enrichment_example.py`
+
+Demonstrates the complete AI content enrichment workflow for generating rich, evidence-based educational content.
+
+**What you'll learn:**
+- Scan and analyze a codebase
+- Export basic course structure
+- List lessons available for enrichment
+- Get comprehensive enrichment guide with evidence
+- Simulate AI content enrichment
+- Update lessons with enriched content
+- Verify enrichment status
+
+**Run it:**
+```bash
+.\venv\Scripts\python.exe examples/enrichment_example.py
+```
+
+**Expected output:**
+```
+✓ Scanned codebase: abc123
+✓ Exported basic course structure
+✓ Found 12 lessons (10 pending, 2 completed)
+✓ Generated enrichment guide
+  - Feature Mapping: User Authentication System
+  - Evidence Bundle: 5 source files, 3 test files, 8 git commits
+  - Teaching Value: 14/14 (should teach)
+  - Systematic Investigation: what, why, how, when, edge cases, pitfalls
+  - Narrative Structure: 3 intro points, 6 learning progression steps
+  - Code Sections: 2 sections with detailed guides
+✓ Generated enriched content
+✓ Successfully updated lesson
+✓ Enrichment Status: completed
+```
+
+### Enrichment Guide Sample
+**File:** `enrichment_guide_sample.json`
+
+A complete example of an enrichment guide showing all the evidence and context provided to AI assistants for content generation.
+
+**Structure:**
+- **Feature Mapping**: Connects code to user-facing features
+- **Evidence Bundle**: Source files, tests, git commits, documentation
+- **Validation Checklist**: Cross-referenced evidence for consistency
+- **Teaching Value Assessment**: Scoring (0-14) with reasoning
+- **Systematic Investigation**: What, why, how, when, edge cases, pitfalls
+- **Narrative Structure**: Introduction, progression, walkthrough, conclusion
+- **Code Sections**: Detailed guides for each code snippet with citations
+- **Architecture Context**: Component role, data flow, dependencies, patterns
+- **Real-World Context**: Use cases, analogies, best practices, anti-patterns
+- **Exercise Generation**: Hands-on tasks, hints, test cases, self-assessment
+- **Anti-Hallucination Rules**: Evidence requirements and validation rules
+- **Enrichment Instructions**: Tone, depth, focus areas, evidence requirements
+
+**Use it as a reference:**
+```bash
+# View the complete structure
+cat examples/enrichment_guide_sample.json
+
+# Or load in Python
+import json
+guide = json.load(open('examples/enrichment_guide_sample.json'))
+print(f"Feature: {guide['feature_mapping']['feature_name']}")
+print(f"Teaching Value: {guide['teaching_value_assessment']['total_score']}/14")
+```
+
+**Key Features:**
+- Evidence-based approach (all claims cite sources)
+- Beginner-friendly explanations with analogies
+- Progressive learning structure (simple → complex)
+- Real-world context and practical use cases
+- Security best practices and common pitfalls
+- Comprehensive exercise generation with hints
 
 ---
 

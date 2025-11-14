@@ -1,0 +1,613 @@
+{
+  "course_id": "6eb8471b-977c-4c76-8459-60ba35ed8683",
+  "title": "Learn 067Ceb9A9D7Abebe",
+  "description": "A comprehensive course with 5 modules covering 61 files and 86 patterns.",
+  "author": "Documee Course Generator",
+  "version": "1.0.0",
+  "created_at": "2025-11-14T00:48:08.857441",
+  "total_duration_hours": 15.6,
+  "difficulty_distribution": {
+    "beginner": 10,
+    "intermediate": 9,
+    "advanced": 0
+  },
+  "tags": [
+    "global_python_comprehensions",
+    "global_session_authentication",
+    "global_database_migration",
+    "global_oauth_authentication",
+    "global_python_async_await",
+    "global_python_context_managers",
+    "global_python_decorators",
+    "global_python_generators",
+    "global_jwt_authentication",
+    "global_password_hashing"
+  ],
+  "prerequisites": [],
+  "modules": [
+    {
+      "module_id": "55924711-fa17-440b-8e77-9c7759e51e54",
+      "title": "Module 2: Python Async Await",
+      "description": "This module covers: python_context_managers, python_comprehensions, python_async_await, session_authentication",
+      "order": 1,
+      "difficulty": "beginner",
+      "duration_hours": 5.1,
+      "learning_objectives": [
+        "Master python async await patterns",
+        "Master python comprehensions patterns",
+        "Master python context managers patterns",
+        "Build foundational programming skills",
+        "Integrate multiple concepts into cohesive solutions"
+      ],
+      "lessons": [
+        {
+          "lesson_id": "bc316f76-ab08-4396-ba5c-d5b101ae9835",
+          "title": "Incremental Updater: Python Async Await",
+          "description": "Excellent teaching value (score: 0.88). Well-documented (100% coverage). Ideal complexity (avg: 3.3) for teaching. Contains useful patterns. Well-structured code. Demonstrates: python_context_managers, python_async_await, python_comprehensions",
+          "order": 0,
+          "difficulty": "beginner",
+          "duration_minutes": 60,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\incremental_updater.py",
+          "teaching_value": 0.88,
+          "learning_objectives": [
+            "Understand python context managers pattern",
+            "Understand python async await pattern",
+            "Understand python comprehensions pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "03d6f14c-63c2-4319-8c71-da7203aba0be",
+          "title": "Exercise Generator: Python Async Await",
+          "description": "Excellent teaching value (score: 0.84). Well-documented (100% coverage). Ideal complexity (avg: 4.8) for teaching. Contains useful patterns. Well-structured code. Demonstrates: python_context_managers, python_async_await, python_comprehensions",
+          "order": 1,
+          "difficulty": "beginner",
+          "duration_minutes": 48,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\exercise_generator.py",
+          "teaching_value": 0.84,
+          "learning_objectives": [
+            "Understand python context managers pattern",
+            "Understand python async await pattern",
+            "Understand python comprehensions pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "5ae48771-0c34-4d63-9a15-75cdcaa8178a",
+          "title": "Linter Integration: Python Async Await",
+          "description": "Excellent teaching value (score: 0.83). Well-documented (100% coverage). Ideal complexity (avg: 3.3) for teaching. Contains useful patterns. Well-structured code. Demonstrates: python_async_await, python_comprehensions",
+          "order": 2,
+          "difficulty": "beginner",
+          "duration_minutes": 42,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\analysis\\linter_integration.py",
+          "teaching_value": 0.83,
+          "learning_objectives": [
+            "Understand python async await pattern",
+            "Understand python comprehensions pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_async_await",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_async_await",
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "df367e49-2e31-4b8e-846d-3ca24af535e9",
+          "title": "Enrichment Guide Generator: Python Async Await",
+          "description": "Excellent teaching value (score: 0.80). Well-documented (100% coverage). Ideal complexity (avg: 3.0) for teaching. Contains some patterns. Well-structured code. Demonstrates: python_async_await",
+          "order": 3,
+          "difficulty": "beginner",
+          "duration_minutes": 42,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\enrichment_guide_generator.py",
+          "teaching_value": 0.8,
+          "learning_objectives": [
+            "Understand python async await pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_async_await"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_async_await"
+          ]
+        },
+        {
+          "lesson_id": "c0a0818e-c83f-4437-b99e-54063c268036",
+          "title": "Engine: Python Async Await",
+          "description": "Excellent teaching value (score: 0.89). Well-documented (100% coverage). Ideal complexity (avg: 6.8) for teaching. Contains useful patterns. Well-structured code. Demonstrates: session_authentication, python_context_managers, python_async_await, python_comprehensions",
+          "order": 4,
+          "difficulty": "intermediate",
+          "duration_minutes": 54,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\analysis\\engine.py",
+          "teaching_value": 0.89,
+          "learning_objectives": [
+            "Understand session authentication pattern",
+            "Understand python context managers pattern",
+            "Understand python async await pattern",
+            "Analyze complex code structure",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "session_authentication",
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "session_authentication",
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "9b52d6eb-a96a-460a-b2d5-cb548d801764",
+          "title": "Detect Frameworks: Python Async Await",
+          "description": "Excellent teaching value (score: 0.81). Well-documented (100% coverage). Slightly complex (avg complexity: 9.3). Contains useful patterns. Well-structured code. Demonstrates: python_context_managers, python_async_await, python_comprehensions",
+          "order": 5,
+          "difficulty": "intermediate",
+          "duration_minutes": 60,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\tools\\detect_frameworks.py",
+          "teaching_value": 0.805,
+          "learning_objectives": [
+            "Understand python context managers pattern",
+            "Understand python async await pattern",
+            "Understand python comprehensions pattern",
+            "Analyze complex code structure",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ]
+        }
+      ]
+    },
+    {
+      "module_id": "14543ef6-4a7f-495e-bba7-dc9dbbf4b5f9",
+      "title": "Module 3: Python Context Managers",
+      "description": "This module covers: python_context_managers, session_authentication",
+      "order": 2,
+      "difficulty": "beginner",
+      "duration_hours": 1.3,
+      "learning_objectives": [
+        "Master python context managers patterns",
+        "Master session authentication patterns",
+        "Build foundational programming skills"
+      ],
+      "lessons": [
+        {
+          "lesson_id": "928e2269-a0c2-42cb-ab09-e62fbd6a7585",
+          "title": "Persistence: Python Context Managers",
+          "description": "Excellent teaching value (score: 0.83). Well-documented (100% coverage). Ideal complexity (avg: 3.0) for teaching. Contains useful patterns. Well-structured code. Demonstrates: session_authentication, python_context_managers",
+          "order": 0,
+          "difficulty": "beginner",
+          "duration_minutes": 42,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\analysis\\persistence.py",
+          "teaching_value": 0.83,
+          "learning_objectives": [
+            "Understand session authentication pattern",
+            "Understand python context managers pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "session_authentication",
+            "python_context_managers"
+          ],
+          "exercises": [],
+          "tags": [
+            "session_authentication",
+            "python_context_managers"
+          ]
+        },
+        {
+          "lesson_id": "0ca7ddd0-8005-40c2-bf95-77f0101bbf8f",
+          "title": "Settings: Python Context Managers",
+          "description": "Excellent teaching value (score: 0.78). Well-documented (100% coverage). Ideal complexity (avg: 5.8) for teaching. Contains some patterns. Well-structured code. Demonstrates: python_context_managers",
+          "order": 1,
+          "difficulty": "intermediate",
+          "duration_minutes": 36,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\config\\settings.py",
+          "teaching_value": 0.78,
+          "learning_objectives": [
+            "Understand python context managers pattern",
+            "Analyze complex code structure",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_context_managers"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_context_managers"
+          ]
+        }
+      ]
+    },
+    {
+      "module_id": "cd923965-17a7-4908-8c2f-61601442c6c5",
+      "title": "Module 5: Session Authentication",
+      "description": "This module covers: session_authentication",
+      "order": 4,
+      "difficulty": "beginner",
+      "duration_hours": 0.6,
+      "learning_objectives": [
+        "Master session authentication patterns",
+        "Build foundational programming skills"
+      ],
+      "lessons": [
+        {
+          "lesson_id": "96bb1914-efca-43d6-bb21-affbd63e6884",
+          "title": "Teaching Value Assessor: Session Authentication",
+          "description": "Excellent teaching value (score: 0.78). Well-documented (100% coverage). Ideal complexity (avg: 5.0) for teaching. Contains some patterns. Well-structured code. Demonstrates: session_authentication",
+          "order": 0,
+          "difficulty": "beginner",
+          "duration_minutes": 36,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\teaching_value_assessor.py",
+          "teaching_value": 0.78,
+          "learning_objectives": [
+            "Understand session authentication pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "session_authentication"
+          ],
+          "exercises": [],
+          "tags": [
+            "session_authentication"
+          ]
+        }
+      ]
+    },
+    {
+      "module_id": "6f8a1e49-e400-48e9-bb24-d257da3f43b8",
+      "title": "Module 1: Python Comprehensions",
+      "description": "This module covers: python_generators, python_async_await, python_comprehensions, python_context_managers, password_hashing",
+      "order": 0,
+      "difficulty": "intermediate",
+      "duration_hours": 7.6,
+      "learning_objectives": [
+        "Master python comprehensions patterns",
+        "Master python async await patterns",
+        "Master python context managers patterns",
+        "Apply intermediate programming concepts",
+        "Integrate multiple concepts into cohesive solutions"
+      ],
+      "lessons": [
+        {
+          "lesson_id": "d9312317-f8ba-455b-8d51-2653199a3e1b",
+          "title": "Performance Monitor: Python Comprehensions",
+          "description": "Excellent teaching value (score: 0.82). Well-documented (100% coverage). Slightly simple (avg complexity: 2.1). Contains useful patterns. Well-structured code. Demonstrates: python_context_managers, python_generators, python_comprehensions",
+          "order": 0,
+          "difficulty": "beginner",
+          "duration_minutes": 60,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\performance_monitor.py",
+          "teaching_value": 0.825,
+          "learning_objectives": [
+            "Understand python context managers pattern",
+            "Understand python generators pattern",
+            "Understand python comprehensions pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_context_managers",
+            "python_generators",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_context_managers",
+            "python_generators",
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "6f0c17ca-1330-4759-a931-c9b897d560ec",
+          "title": "Structure Generator: Python Comprehensions",
+          "description": "Excellent teaching value (score: 0.82). Well-documented (100% coverage). Ideal complexity (avg: 3.7) for teaching. Contains useful patterns. Reasonable structure. Demonstrates: python_context_managers, python_async_await, python_comprehensions",
+          "order": 1,
+          "difficulty": "beginner",
+          "duration_minutes": 48,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\structure_generator.py",
+          "teaching_value": 0.82,
+          "learning_objectives": [
+            "Understand python context managers pattern",
+            "Understand python async await pattern",
+            "Understand python comprehensions pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "f87556ea-ece9-428e-b3e4-dfa43a181794",
+          "title": "Dependency Analyzer: Python Comprehensions",
+          "description": "Excellent teaching value (score: 0.78). Well-documented (100% coverage). Ideal complexity (avg: 3.4) for teaching. Contains some patterns. Well-structured code. Demonstrates: python_comprehensions",
+          "order": 2,
+          "difficulty": "beginner",
+          "duration_minutes": 60,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\analysis\\dependency_analyzer.py",
+          "teaching_value": 0.78,
+          "learning_objectives": [
+            "Understand python comprehensions pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "8cc9a22b-babf-46f6-8150-64022feedde3",
+          "title": "Content Validator: Python Comprehensions",
+          "description": "Excellent teaching value (score: 0.78). Well-documented (100% coverage). Ideal complexity (avg: 4.7) for teaching. Contains some patterns. Well-structured code. Demonstrates: python_comprehensions",
+          "order": 3,
+          "difficulty": "beginner",
+          "duration_minutes": 48,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\content_validator.py",
+          "teaching_value": 0.78,
+          "learning_objectives": [
+            "Understand python comprehensions pattern",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "eb892512-adbf-4760-9949-1b88e213a5dd",
+          "title": "Content Generator: Python Comprehensions",
+          "description": "Excellent teaching value (score: 0.82). Well-documented (100% coverage). Ideal complexity (avg: 5.3) for teaching. Contains useful patterns. Reasonable structure. Demonstrates: python_context_managers, python_async_await, python_comprehensions",
+          "order": 4,
+          "difficulty": "intermediate",
+          "duration_minutes": 48,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\content_generator.py",
+          "teaching_value": 0.82,
+          "learning_objectives": [
+            "Understand python context managers pattern",
+            "Understand python async await pattern",
+            "Understand python comprehensions pattern",
+            "Analyze complex code structure",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_context_managers",
+            "python_async_await",
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "2109cca4-bc6b-4aec-b9aa-888dbba392bc",
+          "title": "Code Section Guide Generator: Python Comprehensions",
+          "description": "Excellent teaching value (score: 0.80). Well-documented (100% coverage). Slightly complex (avg complexity: 9.0). Contains useful patterns. Reasonable structure. Demonstrates: password_hashing, python_generators, python_async_await, python_comprehensions",
+          "order": 5,
+          "difficulty": "intermediate",
+          "duration_minutes": 54,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\code_section_guide_generator.py",
+          "teaching_value": 0.795,
+          "learning_objectives": [
+            "Understand password hashing pattern",
+            "Understand python generators pattern",
+            "Understand python async await pattern",
+            "Analyze complex code structure",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "password_hashing",
+            "python_generators",
+            "python_async_await",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "password_hashing",
+            "python_generators",
+            "python_async_await",
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "a4dececf-29ab-45a0-9495-240d64af62ff",
+          "title": "Investigation Engine: Python Comprehensions",
+          "description": "Excellent teaching value (score: 0.79). Well-documented (100% coverage). Ideal complexity (avg: 5.7) for teaching. Contains useful patterns. Well-structured code. Demonstrates: python_generators, python_comprehensions",
+          "order": 6,
+          "difficulty": "intermediate",
+          "duration_minutes": 48,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\investigation_engine.py",
+          "teaching_value": 0.79,
+          "learning_objectives": [
+            "Understand python generators pattern",
+            "Understand python comprehensions pattern",
+            "Analyze complex code structure",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_generators",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_generators",
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "3601229e-3d3d-4817-ad37-2b3abf0c5429",
+          "title": "Validation Engine: Python Comprehensions",
+          "description": "Excellent teaching value (score: 0.79). Well-documented (100% coverage). Ideal complexity (avg: 5.7) for teaching. Contains useful patterns. Well-structured code. Demonstrates: python_async_await, python_comprehensions",
+          "order": 7,
+          "difficulty": "intermediate",
+          "duration_minutes": 48,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\course\\validation_engine.py",
+          "teaching_value": 0.79,
+          "learning_objectives": [
+            "Understand python async await pattern",
+            "Understand python comprehensions pattern",
+            "Analyze complex code structure",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_async_await",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_async_await",
+            "python_comprehensions"
+          ]
+        },
+        {
+          "lesson_id": "e15ff18f-df33-4956-b942-a2a524a1195c",
+          "title": "Teaching Value Scorer: Python Comprehensions",
+          "description": "Excellent teaching value (score: 0.78). Well-documented (100% coverage). Ideal complexity (avg: 6.0) for teaching. Contains some patterns. Well-structured code. Demonstrates: python_comprehensions",
+          "order": 8,
+          "difficulty": "intermediate",
+          "duration_minutes": 42,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\analysis\\teaching_value_scorer.py",
+          "teaching_value": 0.78,
+          "learning_objectives": [
+            "Understand python comprehensions pattern",
+            "Analyze complex code structure",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "python_comprehensions"
+          ]
+        }
+      ]
+    },
+    {
+      "module_id": "d887ccf5-874a-4e1e-808d-887c491fdd9a",
+      "title": "Module 4: Database Migration",
+      "description": "This module covers: python_comprehensions, database_migration, session_authentication, oauth_authentication, jwt_authentication",
+      "order": 3,
+      "difficulty": "intermediate",
+      "duration_hours": 1.0,
+      "learning_objectives": [
+        "Master database migration patterns",
+        "Master jwt authentication patterns",
+        "Master oauth authentication patterns",
+        "Apply intermediate programming concepts"
+      ],
+      "lessons": [
+        {
+          "lesson_id": "d1ec59e7-9137-4764-904f-c1a7ed530f27",
+          "title": "Pattern Detector: Database Migration",
+          "description": "Excellent teaching value (score: 0.98). Well-documented (100% coverage). Ideal complexity (avg: 6.5) for teaching. Contains useful patterns. Well-structured code. Demonstrates: database_migration, jwt_authentication, oauth_authentication, session_authentication, api_key_authentication, password_hashing, python_comprehensions",
+          "order": 0,
+          "difficulty": "intermediate",
+          "duration_minutes": 60,
+          "file_path": "C:\\Users\\brian\\OneDrive\\Documents\\Apps\\Documee_mcp\\src\\analysis\\pattern_detector.py",
+          "teaching_value": 0.98,
+          "learning_objectives": [
+            "Understand database migration pattern",
+            "Understand jwt authentication pattern",
+            "Understand oauth authentication pattern",
+            "Analyze complex code structure",
+            "Learn documentation best practices"
+          ],
+          "prerequisites": [],
+          "concepts": [
+            "database_migration",
+            "jwt_authentication",
+            "oauth_authentication",
+            "session_authentication",
+            "api_key_authentication",
+            "password_hashing",
+            "python_comprehensions"
+          ],
+          "exercises": [],
+          "tags": [
+            "database_migration",
+            "jwt_authentication",
+            "oauth_authentication",
+            "session_authentication",
+            "api_key_authentication",
+            "password_hashing",
+            "python_comprehensions"
+          ]
+        }
+      ]
+    }
+  ]
+}
